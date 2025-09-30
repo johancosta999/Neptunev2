@@ -1,0 +1,61 @@
+/* Page Styles */
+.chart-page {
+  padding: 30px;
+  background-color: #f4f6f9;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Title */
+.chart-title {
+  text-align: center;
+  color: #004d99;
+  margin-bottom: 25px;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Controls */
+.chart-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.range-dropdown {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Chart Card */
+.chart-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 0 auto;
+  max-width: 1200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chart-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .chart-card {
+    padding: 15px;
+  }
+}
