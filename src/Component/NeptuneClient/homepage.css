@@ -1,0 +1,96 @@
+/* General Reset */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f7f9fc;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: #004d99;
+  color: #fff;
+}
+.navbar .brand {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+.navbar .nav-links {
+  display: flex;
+  gap: 20px;
+}
+.navbar .nav-links li {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+}
+.logout-btn {
+  padding: 6px 12px;
+  background-color: #ff4d4f;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Footer */
+.footer {
+  padding: 15px;
+  text-align: center;
+  background-color: #004d99;
+  color: #fff;
+  margin-top: 30px;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+/* Cards */
+.card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+.card p {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin: 0;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+}
+
+/* Card colors */
+.card-blue { background-color: #e6f0ff; }
+.card-green { background-color: #e6ffe6; }
+.card-yellow { background-color: #fffbe6; }
+.card-red { background-color: #ffe6e6; }
+
+/* Welcome Banner */
+.welcome-banner {
+  text-align: center;
+  padding: 20px 0;
+  color: #004d99;
+  font-size: 1.2rem;
+}

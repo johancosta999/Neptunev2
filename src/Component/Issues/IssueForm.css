@@ -1,0 +1,71 @@
+.issue-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 25px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background-color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.issue-title {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.issue-form .form-group,
+.issue-form .form-group-inline > div {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.issue-form .form-group-inline {
+  display: flex;
+  gap: 15px;
+}
+
+.issue-form input,
+.issue-form textarea,
+.issue-form select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.issue-form input:focus,
+.issue-form textarea:focus,
+.issue-form select:focus {
+  outline: none;
+  border-color: #007BFF;
+}
+
+.hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #007BFF;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
