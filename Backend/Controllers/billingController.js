@@ -1,6 +1,7 @@
 const Billing = require("../Model/Billing");
 const { get } = require("../Routes/billingRoutes");
 
+
 //1.Create a normal bill
 const createBill = async (req, res) => {
   try {
