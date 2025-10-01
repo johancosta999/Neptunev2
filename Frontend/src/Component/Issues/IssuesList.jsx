@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import "./IssueList.css";
+import { Link } from "react-router-dom";
 
 export default function IssueList() {
   const { tankId } = useParams(); // get tankId from URL
@@ -18,7 +19,8 @@ export default function IssueList() {
         const res = await axios.get(
           `http://localhost:5000/api/issues/mine?tankId=${tankId}`
         );
-        setIssues(res.data);
+        // hide resolved issues from user view
+        setIssues((res.data || []).filter(i => i.status !== "Resolved"));
       } catch (err) {
         console.error("Error fetching issues:", err);
         setError("Failed to load issues. Please try again.");
@@ -39,6 +41,12 @@ export default function IssueList() {
       {!loading && !error && issues.length === 0 && (
         <p className="issue-list-message">No issues reported yet for this tank.</p>
       )}
+
+      <Link to={"/homepage"}>
+      <div style={{ marginBottom: 12 }}>
+        <button style={{ background: '#111827', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Back</button>
+      </div>
+      </Link>
 
       {!loading && !error && issues.length > 0 && (
         <div className="issue-cards">
@@ -67,9 +75,19 @@ export default function IssueList() {
                 Reported on: {new Date(issue.createdAt).toLocaleDateString()}
               </p>
               {issue.attachments && issue.attachments.length > 0 && (
-                <p className="issue-card-attachments">
-                  Attachments: {issue.attachments.length}
-                </p>
+                <div className="issue-card-attachments">
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {issue.attachments.map((src, idx) => (
+                      <img
+                        key={idx}
+                        src={`http://localhost:5000${src}`}
+                        alt="attachment"
+                        style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }}
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           ))}

@@ -11,12 +11,8 @@ export default function IssueListAdmin() {
   const [error, setError] = useState("");
   const { tankId } = useParams();
 
-  // For demo purposes, static list of technicians
-  const technicians = [
-    { id: "tech-1", name: "John Doe" },
-    { id: "tech-2", name: "Jane Smith" },
-    { id: "tech-3", name: "Ali Khan" },
-  ];
+  const [techs, setTechs] = useState([]);
+  const [tankCityById, setTankCityById] = useState({});
 
   useEffect(() => {
   const fetchIssues = async () => {
@@ -24,7 +20,13 @@ export default function IssueListAdmin() {
       setLoading(true);
       setError("");
       const res = await axios.get(`http://localhost:5000/api/issues/mine?tankId=${tankId}`);
-      setIssues(res.data);
+      const sorted = (res.data || []).sort((a, b) => {
+        const aAssigned = !!a.assignedTo;
+        const bAssigned = !!b.assignedTo;
+        if (aAssigned === bAssigned) return new Date(b.createdAt) - new Date(a.createdAt);
+        return aAssigned - bAssigned; // unassigned first
+      });
+      setIssues(sorted);
     } catch (err) {
       console.error("Error fetching issues:", err);
       setError("Failed to load issues. Please try again.");
@@ -35,6 +37,36 @@ export default function IssueListAdmin() {
   if (tankId) fetchIssues();
 }, [tankId]);
 
+  useEffect(() => {
+    const loadTechs = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/staffs");
+        setTechs(res.data?.data || []);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadTechs();
+  }, []);
+
+  // Whenever issues list changes, fetch city for each tank (once)
+  useEffect(() => {
+    const fetchCities = async () => {
+      const uniqueTankIds = Array.from(new Set(issues.map(i => i.tankId)));
+      const updates = {};
+      await Promise.all(uniqueTankIds.map(async (id) => {
+        if (tankCityById[id]) return; // already loaded
+        try {
+          const res = await axios.get(`http://localhost:5000/api/sellers/${id}`);
+          if (res.data?.city) updates[id] = res.data.city;
+        } catch (e) { /* ignore */ }
+      }));
+      if (Object.keys(updates).length) {
+        setTankCityById(prev => ({ ...prev, ...updates }));
+      }
+    };
+    if (issues.length) fetchCities();
+  }, [issues]);
 
   const assignTech = async (issueId, techId) => {
     try {
@@ -54,6 +86,15 @@ export default function IssueListAdmin() {
     }
   };
 
+  const markDone = async (issueId) => {
+    try {
+      await axios.patch(`http://localhost:5000/api/issues/${issueId}/resolve`);
+      setIssues((prev) => prev.map((i) => i._id === issueId ? { ...i, status: "Resolved" } : i));
+    } catch (err) {
+      alert("Failed to mark as done");
+    }
+  };
+
   return (
    <div><Nav />
 
@@ -61,6 +102,9 @@ export default function IssueListAdmin() {
 
       
       <h2 className="issue-admin-title">All Reported Issues</h2>
+      <div style={{ marginBottom: 12 }}>
+        <button onClick={() => window.history.back()} style={{ background: '#111827', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Back</button>
+      </div>
 
       {loading && <p className="issue-admin-message">Loading issues...</p>}
       {error && <p className="issue-admin-error">{error}</p>}
@@ -87,6 +131,9 @@ export default function IssueListAdmin() {
                   {issue.status}
                 </span>
               </div>
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => markDone(issue._id)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Solved</button>
+              </div>
               <p className="issue-card-desc">{issue.description}</p>
               <div className="issue-card-meta">
                 <span>Tank ID: {issue.tankId}</span>
@@ -98,30 +145,44 @@ export default function IssueListAdmin() {
               </p>
 
               {issue.attachments && issue.attachments.length > 0 && (
-                <p className="issue-card-attachments">
-                  Attachments: {issue.attachments.length}
-                </p>
+                <div className="issue-card-attachments">
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {issue.attachments.map((src, idx) => (
+                      <img
+                        key={idx}
+                        src={`http://localhost:5000${src}`}
+                        alt="attachment"
+                        style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" }}
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div className="assign-tech">
                 <label>Assign Technician:</label>
                 <select
                   defaultValue={issue.assignedTo || ""}
-                  onChange={(e) =>
-                    assignTech(issue._id, e.target.value)
-                  }
+                  onChange={(e) => assignTech(issue._id, e.target.value)}
                 >
                   <option value="">-- Select Technician --</option>
-                  {technicians.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
+                  {techs
+                    .filter((t) => {
+                      const tankCity = tankCityById[issue.tankId];
+                      if (!tankCity) return true;
+                      return (t.location || "").toLowerCase() === tankCity.toLowerCase();
+                    })
+                    .map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name} {t.location ? `(${t.location})` : ""}
+                      </option>
+                    ))}
                 </select>
                 {issue.assignedTo && (
                   <p className="assigned-label">
                     Assigned to:{" "}
-                    {technicians.find((t) => t.id === issue.assignedTo)?.name ||
+                    {techs.find((t) => t._id === issue.assignedTo)?.name ||
                       "Unknown"}
                   </p>
                 )}

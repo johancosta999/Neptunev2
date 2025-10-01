@@ -47,3 +47,46 @@ exports.deleteIssue = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Assign technician and update status
+exports.assignTechnician = async (req, res) => {
+  try {
+    const { technicianId } = req.body;
+    const updated = await Issue.findByIdAndUpdate(
+      req.params.id,
+      { assignedTo: technicianId, status: "Assigned In Progress" },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Issue not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// List recent open/unassigned issues for notifications
+exports.getOpenIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find({ status: { $in: ["Open"] } })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(issues);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Mark issue as resolved
+exports.resolveIssue = async (req, res) => {
+  try {
+    const updated = await Issue.findByIdAndUpdate(
+      req.params.id,
+      { status: "Resolved" },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Issue not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};

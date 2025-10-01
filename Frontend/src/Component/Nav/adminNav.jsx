@@ -1,14 +1,31 @@
 import { bottomNavigationActionClasses } from '@mui/material';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 function AdminNav() {   // ✅ Capitalized
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New tank registered', time: 'Just now' },
-    { id: 2, text: 'Low water level alert - TANK-102', time: '10m ago' },
-    { id: 3, text: 'Staff profile updated', time: '1h ago' },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    const fetchOpenIssues = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/issues/open');
+        const list = (res.data || []).map(i => ({
+          id: i._id,
+          text: `New issue: ${i.title} - ${i.tankId}`,
+          time: new Date(i.createdAt).toLocaleTimeString(),
+          tankId: i.tankId,
+        }));
+        setNotifications(list);
+        setUnread(list.length);
+      } catch (e) { console.error(e); }
+    };
+    fetchOpenIssues();
+    const interval = setInterval(fetchOpenIssues, 15000);
+    return () => clearInterval(interval);
+  }, []);
   const navigate = useNavigate();
 
   const styles = {
@@ -61,7 +78,7 @@ function AdminNav() {   // ✅ Capitalized
             style={styles.bellBtn}
           >
             🔔
-            {notifications.length > 0 && <span style={styles.badge}>{notifications.length}</span>}
+            {unread > 0 && <span style={styles.badge}>{unread}</span>}
           </button>
 
           <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
@@ -71,7 +88,7 @@ function AdminNav() {   // ✅ Capitalized
               <div style={styles.panelHeader}>
                 <strong>Notifications</strong>
                 <button
-                  onClick={() => { setNotifications([]); setIsNotifOpen(false); }}
+                  onClick={() => { setUnread(0); setIsNotifOpen(false); }}
                   style={{ background: 'transparent', border: 'none', color: '#2563eb', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Mark all read
@@ -82,7 +99,7 @@ function AdminNav() {   // ✅ Capitalized
                   <div style={{ padding: 12, color: '#6b7280' }}>No new notifications</div>
                 ) : (
                   notifications.map((n) => (
-                    <div key={n.id} style={styles.panelItem}>
+                    <div key={n.id} style={styles.panelItem} onClick={() => navigate(`/admin/issues/${n.tankId}`)}>
                       <div style={{ fontWeight: 600 }}>{n.text}</div>
                       <div style={{ color: '#6b7280', fontSize: 12 }}>{n.time}</div>
                     </div>
