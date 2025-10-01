@@ -105,7 +105,7 @@ function AddStaff() {
 
   // Cities list (expandable)
   const cities = [
-    "Colombo", "Negombo", "Kurunegala", "Ja-Ela",
+    "Colombo", "Negombo", "Kurunegala", "Ja Ela",
     "Kandy", "Galle", "Matara", "Anuradhapura", "Jaffna", "Trincomalee"
   ];
 

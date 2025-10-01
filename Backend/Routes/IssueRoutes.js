@@ -37,7 +37,7 @@ router.get("/mine", getMyIssues);
 router.get("/open", getOpenIssues);
 router.get("/:id", getIssue);
 router.patch("/:id/assign", assignTechnician);
-router.patch("/:id/resolve", resolveIssue);
+router.patch("/:id/resolve", resolveIssue); // ✅ correct one
 router.delete("/:id", deleteIssue);
 
 module.exports = router;
