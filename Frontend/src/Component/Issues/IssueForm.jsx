@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./IssueForm.css";
@@ -14,6 +14,21 @@ export default function IssueForm() {
   });
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Initialize tankId from logged-in user (saved in localStorage by Login)
+  useEffect(() => {
+    try {
+      const storedTankId = localStorage.getItem("tankId");
+      if (storedTankId) {
+        setForm((prev) => ({ ...prev, tankId: storedTankId }));
+        return;
+      }
+      const loggedTank = JSON.parse(localStorage.getItem("loggedTank") || "null");
+      if (loggedTank?.tankId) {
+        setForm((prev) => ({ ...prev, tankId: loggedTank.tankId }));
+      }
+    } catch {}
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -56,6 +71,7 @@ export default function IssueForm() {
             onChange={handleChange}
             placeholder="Enter your Tank ID"
             required
+            readOnly
           />
         </div>
 

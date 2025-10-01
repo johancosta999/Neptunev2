@@ -150,6 +150,7 @@ function HomePage() {
           <p>{loading ? "Loading..." : currentStatus}</p>
         </Link>
 
+        <Link to={`/issues/${tankId}`} className="card card-yellow">
         <div className="card card-red">
           <h3>⚠️ Issues Reported</h3>
           {loading ? (
@@ -160,6 +161,7 @@ function HomePage() {
             </ul>
           ) : <p>No issues reported.</p>}
         </div>
+        </Link>
       </main>
 
       <Footer />
