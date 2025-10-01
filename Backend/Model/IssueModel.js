@@ -7,6 +7,7 @@ const issueSchema = new mongoose.Schema({
   category: { type: String, enum: ["Water Quality", "Low Level", "Sensor Error", "Billing", "Other"], default: "Other" },
   priority: { type: String, enum: ["Low", "Normal", "High", "Critical"], default: "Normal" },
   status: { type: String, default: "Open" },
+  assignedTo: { type: String }, // staff id or identifier
   attachments: [String],
 }, { timestamps: true });
 
