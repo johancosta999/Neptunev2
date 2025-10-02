@@ -1,27 +1,27 @@
 const nodemailer = require("nodemailer");
 
 const sendEmail = async (to, subject, text) => {
-  // Use your Gmail (or any email) account credentials
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER, // your email
-      pass: process.env.EMAIL_PASS, // app password for Gmail
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-  };
-
   try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "johancosta08@gmail.com",          // replace with your Gmail
+        pass: "181226Aiifa!",            // replace with Gmail App Password
+      },
+    });
+
+    const mailOptions = {
+      from: `"Water Monitoring System" <johancosta08@gmail.com>`,
+      to,
+      subject,
+      text,
+    };
+
     const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent:", info.response);
-  } catch (err) {
-    console.error("Error sending email:", err);
+    console.log("✅ Email sent:", info.response);
+    return info;
+  } catch (error) {
+    console.error("❌ Error sending email:", error.message);
   }
 };
 
