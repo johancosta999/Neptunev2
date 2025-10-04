@@ -9,12 +9,18 @@ import AddWaterQuality from "../src/Component/WaterQuality/AddWaterQuality";
 import EditWaterQuality from "./Component/WaterQuality/EditWaterQuality";
 import Dashboard from "../src/Component/Home/TankDisplay"
 import TankDashboard from "./Component/Pages/TankDashboard";
+import ClientWaterQuality from "./Component/NeptuneClient/ClientWaterQualityDashboard";
+
 import AddWaterLevel from "./Component/WaterLevel/AddWater";
 import EditWaterlevel from "./Component/WaterLevel/EditWaterlevel";
 import Waterlevellist from "./Component/WaterLevel/Waterlevellist";
+import ClientWaterLevel from "./Component/NeptuneClient/ClientWaterLevelDashboard";
+
 import Tanks from "../src/Component/Seller/tanks"
 import AddTank from "../src/Component/Seller/addSeller"
+
 import Home from "./Component/Pages/Home";
+
 import Users from "./Component/Pages/Users";
 // import Staff from "./Component/Pages/Staff";
 import BillingDashboard from "./Component/Pages/BillingDashboard";
@@ -45,6 +51,8 @@ import WaterQualityChart from "./Component/WaterQuality/WaterQualityChart";
 import AddStaff from "./Component/Staff/AddStaff";
 import StaffList from "./Component/Staff/StaffList";
 import EditStaff from "./Component/Staff/EditStaff";
+
+import ClientBill from "./Component/NeptuneClient/ClientBillingDashboard";
 
 
 function App() {
@@ -83,13 +91,15 @@ function App() {
         <Route path="/tank/:tankId/dashboard" element={<TankDashboard />} />
 
         <Route path="/water-quality" element={<WaterQualityList />} />
-        <Route path="/water-quality/add" element={<AddWaterQuality />} />
+        <Route path="/water-quality/add/:tankId" element={<AddWaterQuality />} />
         <Route path="/water-quality/edit/:id" element={<EditWaterQuality />} />
         <Route path="/tank/:tankId/water-quality" element={<WaterQualityList />} />
+        <Route path="/client/water-quality" element={<ClientWaterQuality />} />
 
         <Route path="/water-level/add/:tankId" element={<AddWaterLevel />} />
         <Route path="/water-level/edit/:id" element={<EditWaterlevel />} />
         <Route path="/tank/:tankId/tank-level" element={<Waterlevellist/>} />
+        <Route path="/client/water-level" element={<ClientWaterLevel />} />
 
         <Route path="/sellers" element={<Tanks/ >} />
         <Route path="/add-tank" element={<AddTank/ >} />
@@ -100,6 +110,7 @@ function App() {
         
 
         <Route path="/tank/:tankId/billing" element={<BillingDashboard />} />
+        <Route path="/client/billing" element={<ClientBill />} />
 
         <Route path="/water-level-chart/:tankId" element={<WaterLevelChart />} />
         <Route path="/water-quality-chart/:tankId" element={<WaterQualityChart />} />
