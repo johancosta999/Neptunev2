@@ -14,6 +14,7 @@ import ClientWaterQuality from "./Component/NeptuneClient/ClientWaterQualityDash
 import AddWaterLevel from "./Component/WaterLevel/AddWater";
 import EditWaterlevel from "./Component/WaterLevel/EditWaterlevel";
 import Waterlevellist from "./Component/WaterLevel/Waterlevellist";
+import ClientWaterLevel from "./Component/NeptuneClient/ClientWaterLevelDashboard";
 
 import Tanks from "../src/Component/Seller/tanks"
 import AddTank from "../src/Component/Seller/addSeller"
@@ -98,6 +99,7 @@ function App() {
         <Route path="/water-level/add/:tankId" element={<AddWaterLevel />} />
         <Route path="/water-level/edit/:id" element={<EditWaterlevel />} />
         <Route path="/tank/:tankId/tank-level" element={<Waterlevellist/>} />
+        <Route path="/client/water-level" element={<ClientWaterLevel />} />
 
         <Route path="/sellers" element={<Tanks/ >} />
         <Route path="/add-tank" element={<AddTank/ >} />

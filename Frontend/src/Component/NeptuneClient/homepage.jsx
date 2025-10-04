@@ -13,7 +13,7 @@ function Nav({ tankId, onProfileClick }) {
         <span className="brand-tagline">Smart Water System</span>
       </div>
       <ul className="nav-links">
-        <Link to={`/water-level-chart/${tankId}`} className="nav-link">
+        <Link to={`/client/water-level`} className="nav-link">
           <div className="nav-icon">💧</div>
           <span>Water Level</span>
         </Link>
