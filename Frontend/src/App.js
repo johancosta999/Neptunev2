@@ -9,12 +9,17 @@ import AddWaterQuality from "../src/Component/WaterQuality/AddWaterQuality";
 import EditWaterQuality from "./Component/WaterQuality/EditWaterQuality";
 import Dashboard from "../src/Component/Home/TankDisplay"
 import TankDashboard from "./Component/Pages/TankDashboard";
+import ClientWaterQuality from "./Component/NeptuneClient/ClientWaterQualityDashboard";
+
 import AddWaterLevel from "./Component/WaterLevel/AddWater";
 import EditWaterlevel from "./Component/WaterLevel/EditWaterlevel";
 import Waterlevellist from "./Component/WaterLevel/Waterlevellist";
+
 import Tanks from "../src/Component/Seller/tanks"
 import AddTank from "../src/Component/Seller/addSeller"
+
 import Home from "./Component/Pages/Home";
+
 import Users from "./Component/Pages/Users";
 // import Staff from "./Component/Pages/Staff";
 import BillingDashboard from "./Component/Pages/BillingDashboard";
@@ -88,6 +93,7 @@ function App() {
         <Route path="/water-quality/add/:tankId" element={<AddWaterQuality />} />
         <Route path="/water-quality/edit/:id" element={<EditWaterQuality />} />
         <Route path="/tank/:tankId/water-quality" element={<WaterQualityList />} />
+        <Route path="/client/water-quality" element={<ClientWaterQuality />} />
 
         <Route path="/water-level/add/:tankId" element={<AddWaterLevel />} />
         <Route path="/water-level/edit/:id" element={<EditWaterlevel />} />

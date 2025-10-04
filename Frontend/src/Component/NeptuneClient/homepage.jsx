@@ -17,10 +17,16 @@ function Nav({ tankId, onProfileClick }) {
           <div className="nav-icon">💧</div>
           <span>Water Level</span>
         </Link>
-        <Link to={`/tank/${tankId}/billing`} className="nav-link">
+        <Link to={`/client/billing`} className="nav-link">
           <div className="nav-icon">💰</div>
           <span>Billing</span>
         </Link>
+
+        <Link to={"/client/water-quality"} className="nav-link">
+          <div className="nav-icon">🦠</div>
+          <span>Water Quality</span>
+        </Link>
+
         <Link to={"/issues/new"} className="nav-link">
           <div className="nav-icon">⚠️</div>
           <span>Issues</span>
