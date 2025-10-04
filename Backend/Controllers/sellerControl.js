@@ -1,3 +1,22 @@
+// Change password controller
+const changePassword = async (req, res, next) => {
+    const { tankId } = req.params;
+    const { currentPassword, newPassword } = req.body;
+    try {
+        const seller = await Seller.findOne({ tankId });
+        if (!seller) {
+            return res.status(404).json({ message: "Seller not found." });
+        }
+        if (seller.password !== currentPassword) {
+            return res.status(400).json({ message: "Current password is incorrect." });
+        }
+        seller.password = newPassword;
+        await seller.save();
+        return res.status(200).json({ message: "Password updated successfully." });
+    } catch (err) {
+        return res.status(500).json({ message: "Server error." });
+    }
+};
 const Seller = require("../Model/sellerModel");
 
 const getAllSeller = async (req, res, next) => {
@@ -107,3 +126,4 @@ exports.getById = getById;
 exports.addSeller = addSeller;
 exports.updateSeller = updateSeller;
 exports.deleteSeller = deleteSeller;
+exports.changePassword = changePassword;

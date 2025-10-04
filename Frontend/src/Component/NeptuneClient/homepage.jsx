@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import "./homepage.css"; // Modern liquid glass styles
 
 // 🔹 Enhanced Nav Component with Modern Design
-function Nav({ tankId }) {
+function Nav({ tankId, onProfileClick }) {
   return (
     <nav className="navbar">
       <div className="nav-brand">
@@ -26,13 +26,73 @@ function Nav({ tankId }) {
           <span>Issues</span>
         </Link>
       </ul>
-      <Link to={"/"}>
-        <button className="logout-btn">
-          <span className="logout-icon">🚪</span>
-          Log out
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button className="profile-btn" onClick={onProfileClick} style={{marginRight: 8}}>
+          <span role="img" aria-label="profile">👤</span> Profile
         </button>
-      </Link>
+        <Link to={"/"}>
+          <button className="logout-btn">
+            <span className="logout-icon">🚪</span>
+            Log out
+          </button>
+        </Link>
+      </div>
     </nav>
+  );
+}
+// Customer Profile Modal
+function ProfileModal({ isOpen, onClose }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    if (newPassword !== confirmPassword) {
+      setMessage("New passwords do not match.");
+      return;
+    }
+    try {
+      // Replace with your actual API endpoint and user identification logic
+      const userId = localStorage.getItem("userId");
+      await axios.put(`http://localhost:5000/api/sellers/${userId}/password`, {
+        currentPassword,
+        newPassword
+      });
+      setMessage("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setMessage("Failed to update password. Please check your current password.");
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>👤 Customer Profile</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit} className="profile-form">
+            <label>Current Password</label>
+            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
+            <label>New Password</label>
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+            <label>Confirm New Password</label>
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+            <button type="submit" className="btn-primary" style={{marginTop: 12}}>Update Password</button>
+            {message && <div style={{marginTop: 8, color: message.includes("success") ? "green" : "red"}}>{message}</div>}
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -186,9 +246,9 @@ const calculateMonthlyBill = (weeklySummary) => {
 };
 
 // 🔹 Enhanced HomePage with Modern Design
+
 function HomePage() {
   const tankId = localStorage.getItem("tankId");
-
   const [tankDetails, setTankDetails] = useState(null);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [currentBill, setCurrentBill] = useState(0);
@@ -197,6 +257,7 @@ function HomePage() {
   const [currentStatus, setCurrentStatus] = useState("Loading...");
   const [registeredTanks, setRegisteredTanks] = useState([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     if (!tankId) return;
@@ -263,7 +324,7 @@ function HomePage() {
 
   return (
     <div className="homepage-container">
-      <Nav tankId={tankId} />
+      <Nav tankId={tankId} onProfileClick={() => setShowProfileModal(true)} />
 
       {/* Hero Section */}
       <section className="hero-section">
@@ -412,7 +473,8 @@ function HomePage() {
         onClose={() => setShowUpgradeModal(false)} 
       />
 
-      <Footer />
+  <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+  <Footer />
     </div>
   );
 }

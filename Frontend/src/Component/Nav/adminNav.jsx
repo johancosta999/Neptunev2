@@ -1,9 +1,10 @@
 import { bottomNavigationActionClasses } from '@mui/material';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 function AdminNav() {   // ✅ Capitalized
+  const notifPanelRef = useRef(null);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -26,6 +27,18 @@ function AdminNav() {   // ✅ Capitalized
     const interval = setInterval(fetchOpenIssues, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  // Click-away listener for notification panel
+  useEffect(() => {
+    if (!isNotifOpen) return;
+    function handleClickOutside(event) {
+      if (notifPanelRef.current && !notifPanelRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isNotifOpen]);
   const navigate = useNavigate();
 
   const styles = {
@@ -84,7 +97,7 @@ function AdminNav() {   // ✅ Capitalized
           <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
 
           {isNotifOpen && (
-            <div style={styles.panel}>
+            <div style={styles.panel} ref={notifPanelRef}>
               <div style={styles.panelHeader}>
                 <strong>Notifications</strong>
                 <button
