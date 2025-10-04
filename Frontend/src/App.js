@@ -46,6 +46,8 @@ import AddStaff from "./Component/Staff/AddStaff";
 import StaffList from "./Component/Staff/StaffList";
 import EditStaff from "./Component/Staff/EditStaff";
 
+import ClientBill from "./Component/NeptuneClient/ClientBillingDashboard";
+
 
 function App() {
   return (
@@ -100,6 +102,7 @@ function App() {
         
 
         <Route path="/tank/:tankId/billing" element={<BillingDashboard />} />
+        <Route path="/client/billing" element={<ClientBill />} />
 
         <Route path="/water-level-chart/:tankId" element={<WaterLevelChart />} />
         <Route path="/water-quality-chart/:tankId" element={<WaterQualityChart />} />

@@ -373,7 +373,7 @@ function HomePage() {
           </div>
         </Link>
 
-        <Link to={`/tank/${tankId}/billing`} className="dashboard-card billing">
+        <Link to={`/client/billing`} className="dashboard-card billing">
           <div className="card-header">
             <div className="card-icon">💰</div>
             <h3>Current Bill</h3>
