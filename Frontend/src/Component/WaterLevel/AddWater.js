@@ -9,10 +9,9 @@ function AddWater() {
   const { tankId } = useParams();
   const history = useNavigate();
   const [form, setForm] = useState({
-    
     currentLevel: "",
-    
-    
+    maxCapacity: "",
+    location: "",
     status: "",
     recordedAt: new Date().toISOString(),
   });
@@ -31,9 +30,12 @@ const handleSubmit = async (e) => {
   try {
     const res = await axios.post(`http://localhost:5000/api/waterlevel/${tankId}`, {
       tankId: tankId,
-      currentLevel: form.currentLevel,
+      currentLevel: Number(form.currentLevel),
+      maxCapacity: Number(form.maxCapacity),
+      location: form.location,
       status: form.status,
-      recordedAt: new Date().toISOString(), // this gets updated right before sending
+      recordedAt: new Date().toISOString(),
+      userEmail: "johancosta08@gmail.com", // You can get this from user context or localStorage
     });
 
     alert("✅ Water level record added!");
@@ -41,8 +43,10 @@ const handleSubmit = async (e) => {
 
     setForm({
       currentLevel: "",
+      maxCapacity: "",
+      location: "",
       status: "",
-      recordedAt: "", // reset recordedAt too
+      recordedAt: "",
     });
 
     history(`/tank/${tankId}/tank-level`)
@@ -96,17 +100,42 @@ const handleSubmit = async (e) => {
           style={inputStyle}
         />
 
+        {/* Max Capacity */}
+        <label style={{ color: "#1e88e5", fontWeight: "bold" }}>Max Capacity (L):</label>
+        <input
+          type="number"
+          name="maxCapacity"
+          value={form.maxCapacity}
+          onChange={handleChange}
+          required
+          style={inputStyle}
+        />
 
-        
-          <label style={{ color: "#1e88e5", fontWeight: "bold" }}>Status:</label>
+        {/* Location */}
+        <label style={{ color: "#1e88e5", fontWeight: "bold" }}>Location:</label>
         <input
           type="text"
+          name="location"
+          value={form.location}
+          onChange={handleChange}
+          style={inputStyle}
+          placeholder="e.g., Building A, Floor 2"
+        />
+
+        {/* Status */}
+        <label style={{ color: "#1e88e5", fontWeight: "bold" }}>Status:</label>
+        <select
           name="status"
           value={form.status}
           onChange={handleChange}
           required
           style={inputStyle}
-        />
+        >
+          <option value="">-- Select Status --</option>
+          <option value="Normal">Normal</option>
+          <option value="Low">Low</option>
+          <option value="Critical">Critical</option>
+        </select>
 
         {/* Submit */}
         <button type="submit" style={buttonStyle}>
