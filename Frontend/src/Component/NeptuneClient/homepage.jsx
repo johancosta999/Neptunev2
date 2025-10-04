@@ -13,14 +13,20 @@ function Nav({ tankId, onProfileClick }) {
         <span className="brand-tagline">Smart Water System</span>
       </div>
       <ul className="nav-links">
-        <Link to={`/water-level-chart/${tankId}`} className="nav-link">
+        <Link to={`/client/water-level`} className="nav-link">
           <div className="nav-icon">💧</div>
           <span>Water Level</span>
         </Link>
-        <Link to={`/tank/${tankId}/billing`} className="nav-link">
+        <Link to={`/client/billing`} className="nav-link">
           <div className="nav-icon">💰</div>
           <span>Billing</span>
         </Link>
+
+        <Link to={"/client/water-quality"} className="nav-link">
+          <div className="nav-icon">🦠</div>
+          <span>Water Quality</span>
+        </Link>
+
         <Link to={"/issues/new"} className="nav-link">
           <div className="nav-icon">⚠️</div>
           <span>Issues</span>
@@ -373,7 +379,7 @@ function HomePage() {
           </div>
         </Link>
 
-        <Link to={`/tank/${tankId}/billing`} className="dashboard-card billing">
+        <Link to={`/client/billing`} className="dashboard-card billing">
           <div className="card-header">
             <div className="card-icon">💰</div>
             <h3>Current Bill</h3>
