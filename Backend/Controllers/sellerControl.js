@@ -1,3 +1,20 @@
+// Remove profile picture controller
+const removeProfilePic = async (req, res) => {
+    const { tankId } = req.params;
+    try {
+        const seller = await Seller.findOneAndUpdate(
+            { tankId },
+            { profilePicUrl: '' },
+            { new: true }
+        );
+        if (!seller) {
+            return res.status(404).json({ message: 'Seller not found.' });
+        }
+        return res.status(200).json({ message: 'Profile picture removed.' });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
 // Change password controller
 const changePassword = async (req, res, next) => {
     const { tankId } = req.params;
@@ -18,6 +35,28 @@ const changePassword = async (req, res, next) => {
     }
 };
 const Seller = require("../Model/sellerModel");
+
+// Profile picture upload controller
+const uploadProfilePic = async (req, res) => {
+    const { tankId } = req.params;
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    try {
+        const seller = await Seller.findOneAndUpdate(
+            { tankId },
+            { profilePicUrl: imageUrl },
+            { new: true }
+        );
+        if (!seller) {
+            return res.status(404).json({ message: 'Seller not found.' });
+        }
+        return res.status(200).json({ url: imageUrl });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
 
 const getAllSeller = async (req, res, next) => {
     try{
@@ -127,3 +166,5 @@ exports.addSeller = addSeller;
 exports.updateSeller = updateSeller;
 exports.deleteSeller = deleteSeller;
 exports.changePassword = changePassword;
+exports.uploadProfilePic = uploadProfilePic;
+exports.removeProfilePic = removeProfilePic;

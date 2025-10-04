@@ -79,7 +79,7 @@ function WaterQualityChart() {
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <h3 style={styles.title}>Water Quality (TDS) - {tankId}</h3>
+  <h3 style={styles.title}>Water Quality (TDS & pH) - {tankId}</h3>
         <div style={styles.controls}>
           <label htmlFor="range-select">Range</label>
           <select
@@ -107,19 +107,35 @@ function WaterQualityChart() {
                 })
               }
             />
-            <YAxis domain={[0, 1000]} />
+            <YAxis yAxisId="left" domain={[0, 1000]} label={{ value: 'TDS (mg/L)', angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="right" orientation="right" domain={[0, 14]} label={{ value: 'pH', angle: 90, position: 'insideRight' }} />
             <Tooltip
               labelFormatter={(value) => `Time: ${new Date(value).toLocaleString()}`}
-              formatter={(val) => [val, "TDS (mg/L)"]}
+              formatter={(val, name, props) => {
+                if (props.dataKey === 'tds') return [val, 'TDS (mg/L)'];
+                if (props.dataKey === 'phLevel') return [val, 'pH Level'];
+                return [val, name];
+              }}
             />
             <Legend verticalAlign="top" />
             <Line
+              yAxisId="left"
               type="monotone"
               dataKey="tds"
               stroke="#0ea5e9"
               strokeWidth={3}
               activeDot={{ r: 6 }}
               name="TDS (mg/L)"
+              dot={false}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="phLevel"
+              stroke="#f59e42"
+              strokeWidth={3}
+              activeDot={{ r: 6 }}
+              name="pH Level"
               dot={false}
             />
           </LineChart>
