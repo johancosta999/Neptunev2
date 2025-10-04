@@ -59,6 +59,7 @@ if (displayPic && !displayPic.startsWith("http")) {
   );
 }
 // Customer Profile Modal
+
 function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfilePicUrl }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -69,6 +70,7 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
   const [picChanged, setPicChanged] = useState(false);
   const [savingPic, setSavingPic] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
+  const [removingPic, setRemovingPic] = useState(false);
 
   useEffect(() => {
     setPicPreview(profilePicUrl || "");
@@ -86,6 +88,7 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     }
   };
 
+  // Save/upload new profile pic
   const handlePicSave = async () => {
     if (!picFile) return;
     setSavingPic(true);
@@ -94,10 +97,11 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     formData.append("profilePic", picFile);
     try {
       const res = await axios.post(`http://localhost:5000/api/sellers/${tankDetails.tankId}/profile-pic`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      // Ensure correct URL for local images
-      let url = res.data.url;
-      if (url && url.startsWith('/uploads/')) {
-        url = `${window.location.origin}${url}`;
+      // Always fetch the latest seller info after upload to get the new profilePicUrl
+      const sellerRes = await axios.get(`http://localhost:5000/api/sellers/${tankDetails.tankId}`);
+      let url = sellerRes.data.profilePicUrl;
+      if (url && !url.startsWith('http')) {
+        url = `http://localhost:5000${url}`;
       }
       setProfilePicUrl(url);
       setUploadMsg("Profile picture updated!");
@@ -106,6 +110,22 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
       setUploadMsg("Failed to upload profile picture.");
     } finally {
       setSavingPic(false);
+    }
+  };
+
+  // Remove profile pic
+  const handlePicRemove = async () => {
+    setRemovingPic(true);
+    setUploadMsg("");
+    try {
+      await axios.delete(`http://localhost:5000/api/sellers/${tankDetails.tankId}/profile-pic`);
+      setProfilePicUrl("");
+      setPicPreview("");
+      setUploadMsg("Profile picture removed.");
+    } catch (err) {
+      setUploadMsg("Failed to remove profile picture.");
+    } finally {
+      setRemovingPic(false);
     }
   };
 
@@ -148,7 +168,10 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
             <img src={picPreview || '/default-profile.png'} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid #06b6d4', marginBottom: 8 }} />
             <input type="file" accept="image/*" onChange={handlePicChange} />
-            <button type="button" className="btn-primary" style={{ marginTop: 8 }} onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? 'Saving...' : 'Save'}</button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button type="button" className="btn-primary" onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? 'Saving...' : 'Save'}</button>
+              <button type="button" className="btn-secondary" onClick={handlePicRemove} disabled={removingPic || (!profilePicUrl && !picPreview)} style={{ background: '#eee', color: '#333', border: '1px solid #ccc' }}>{removingPic ? 'Removing...' : 'Remove'}</button>
+            </div>
           </div>
           <div style={{ marginBottom: 16 }}>
             <div><b>Name:</b> {tankDetails?.customerName || '--'}</div>

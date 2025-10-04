@@ -1,3 +1,20 @@
+// Remove profile picture controller
+const removeProfilePic = async (req, res) => {
+    const { tankId } = req.params;
+    try {
+        const seller = await Seller.findOneAndUpdate(
+            { tankId },
+            { profilePicUrl: '' },
+            { new: true }
+        );
+        if (!seller) {
+            return res.status(404).json({ message: 'Seller not found.' });
+        }
+        return res.status(200).json({ message: 'Profile picture removed.' });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
 // Change password controller
 const changePassword = async (req, res, next) => {
     const { tankId } = req.params;
@@ -150,3 +167,4 @@ exports.updateSeller = updateSeller;
 exports.deleteSeller = deleteSeller;
 exports.changePassword = changePassword;
 exports.uploadProfilePic = uploadProfilePic;
+exports.removeProfilePic = removeProfilePic;
