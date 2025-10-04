@@ -156,7 +156,8 @@ function WaterLevelList() {
     return startOk && endOk;
   });
 
-  const filteredRecords = records.filter((rec) => isWithinRange(rec.recordedAt));
+  // Show latest records first
+  const filteredRecords = records.filter((rec) => isWithinRange(rec.recordedAt)).reverse();
 
   // Reset to first page when filters change
   useEffect(() => {
