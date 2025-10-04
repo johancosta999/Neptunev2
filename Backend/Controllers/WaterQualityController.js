@@ -1,4 +1,5 @@
 const WaterQuality = require("../Model/WaterQuality");
+const Seller = require("../Model/sellerModel");
 const axios = require('axios');
 const sendEmail = require("../Utils/sendEmail");
 
@@ -99,19 +100,25 @@ const addWaterQuality = async (req, res, next) => {
 
     // 🔹 Send alert if status is unsafe
     if (status.toLowerCase() === "unsafe") {
-      const subject = `⚠️ Water Quality Alert for Tank ${tankId}`;
-      const message = `URGENT: Water Quality Alert!\n\nTank ID: ${tankId}\nStatus: ${status}\nPH Level: ${phLevel}\nTDS: ${tds}\nTime: ${new Date().toLocaleString()}\n\nPlease take immediate action to address the water quality issue.`;
-      
-      // Send email to admin and user if provided
-      const adminEmail = "johancosta08@gmail.com"; // Admin email
       try {
-        await sendEmail(adminEmail, subject, message);
+        // Find the customer associated with this tank
+        const customer = await Seller.findOne({ tankId: tankId });
+        
+        if (customer && customer.customerEmail) {
+          // Send email to the specific customer
+          const measurement = `PH: ${phLevel}, TDS: ${tds}`;
+          await sendEmail(customer.customerEmail, tankId, "Below Safe Level", measurement);
+          console.log(`✅ Water quality alert email sent to customer: ${customer.customerName} (${customer.customerEmail})`);
+        } else {
+          console.log(`⚠️ No customer found for tank ${tankId} or no email address`);
+        }
+        
+        // Also send to admin for monitoring
+        const adminEmail = "johancosta08@gmail.com";
+        const adminMeasurement = `PH: ${phLevel}, TDS: ${tds}`;
+        await sendEmail(adminEmail, tankId, "Below Safe Level", adminMeasurement);
         console.log("✅ Water quality alert email sent to admin");
         
-        if (userEmail && userEmail !== adminEmail) {
-          await sendEmail(userEmail, subject, message);
-          console.log("✅ Water quality alert email sent to user");
-        }
       } catch (emailError) {
         console.error("❌ Error sending water quality alert email:", emailError);
         // Don't fail the request if email fails
