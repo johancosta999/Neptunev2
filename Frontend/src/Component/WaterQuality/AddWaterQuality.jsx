@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Nav from "../Nav/nav";
 
 function AddWaterQuality() {
@@ -12,7 +12,8 @@ function AddWaterQuality() {
     timestamp: Date.now(),
   });
 
-  const tankId = localStorage.getItem("selectedTankId");
+  const { tankId } = useParams();
+  // const tankId = localStorage.getItem("selectedTankId");
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(""); // 👈 for success / fail
 
@@ -50,7 +51,8 @@ function AddWaterQuality() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  console.log('Selected tankId:', tankId);
 
     // final validation
     for (let key in patterns) {
@@ -76,11 +78,12 @@ function AddWaterQuality() {
 
   const sendRequest = async () => {
     await axios
-      .post("http://localhost:5000/api/water", {
+      .post(`http://localhost:5000/api/waterquality/${tankId}`, {
         tankId: tankId,
         phLevel: Number(inputs.phLevel),
         tds: Number(inputs.tds),
         status: String(inputs.status),
+        recordedAt: new Date().toISOString(),
       })
       .then((res) => res.data);
   };
@@ -135,6 +138,10 @@ function AddWaterQuality() {
 
         <button type="submit">Submit</button>
       </form>
+
+        <Link to={`/tank/${tankId}/water-quality`}>
+        <button>Go back to Water Quality List</button>
+        </Link>
 
       {feedback && (
         <p style={{ color: feedback.includes("✅") ? "green" : "red" }}>

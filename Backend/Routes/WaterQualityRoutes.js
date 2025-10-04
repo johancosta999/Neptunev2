@@ -8,7 +8,7 @@ const Water = require("../Model/WaterQuality");
 const WaterQualityController = require("../Controllers/WaterQualityController");
 
 router.get("/", WaterQualityController.getAllWaterQuality);
-router.post("/", WaterQualityController.addWaterQuality);
+router.post("/:id", WaterQualityController.addWaterQuality);
 router.get("/:id", WaterQualityController.getById);
 router.put("/:id", WaterQualityController.updateWaterQuality);
 router.delete("/:id", WaterQualityController.deleteWaterQuality);

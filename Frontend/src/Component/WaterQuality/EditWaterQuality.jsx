@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 function EditWaterQuality() {
   const [inputs, setInputs] = useState({
@@ -10,6 +10,7 @@ function EditWaterQuality() {
   });
 
   const { id } = useParams();
+  const { tankId } = useParams();
   const history = useNavigate();
 
   useEffect(() => {
@@ -43,7 +44,7 @@ function EditWaterQuality() {
   e.preventDefault();
   const tankId = localStorage.getItem("selectedTankId");
   await sendRequest();
-  history(`/tank/${tankId}/water-quality`);
+  history(`/tank/${inputs.tankId}/water-quality`);
 };
 
 
@@ -71,19 +72,29 @@ function EditWaterQuality() {
           required
         />
         <br />
+
         <label>Status:</label>
-        <input
-          type="text"
-          id="status"
+        <select
           name="status"
           value={inputs.status}
           onChange={handleChange}
           required
-        />
+        >
+          <option value="">{inputs.status}</option>
+          <option value="Safe">Safe</option>
+          <option value="Unsafe">Unsafe</option>
+        </select>
+        
+        <br />
         <br />
 
         <button>Update Record</button>
       </form>
+
+    <Link to={`/tank/${id}/water-quality`}>
+        <button>Go back to Water Quality List</button>
+        </Link>
+
     </div>
   );
 }
