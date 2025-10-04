@@ -71,21 +71,32 @@ function AddWaterQuality() {
         history(`/tank/${tankId}/water-quality`);
       }, 1500);
     } catch (err) {
-      console.error(err);
-      alert("❌ Failed to add water quality record.");
+      console.error("Full error object:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+      
+      const errorMessage = err.response?.data?.message || err.message || "Unknown error occurred";
+      alert(`❌ Failed to add water quality record: ${errorMessage}`);
     }
   };
 
   const sendRequest = async () => {
-    await axios
-      .post(`http://localhost:5000/api/waterquality/${tankId}`, {
-        tankId: tankId,
-        phLevel: Number(inputs.phLevel),
-        tds: Number(inputs.tds),
-        status: String(inputs.status),
-        recordedAt: new Date().toISOString(),
-      })
-      .then((res) => res.data);
+    const requestData = {
+      tankId: tankId,
+      phLevel: Number(inputs.phLevel),
+      tds: Number(inputs.tds),
+      status: String(inputs.status),
+      timestamp: new Date().toISOString(),
+      userEmail: "johancosta421@gmail.com", // You can get this from user context or localStorage
+    };
+    
+    console.log('Sending request data:', requestData);
+    console.log('API URL:', `http://localhost:5000/api/waterquality/${tankId}`);
+    
+    const response = await axios.post(`http://localhost:5000/api/waterquality/${tankId}`, requestData);
+
+    console.log('Response:', response.data);
+    return response.data;
   };
 
   return (

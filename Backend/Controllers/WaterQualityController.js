@@ -56,7 +56,36 @@ const sendWhatsAppMessage = async (phoneNumber, message) => {
 };
 
 const addWaterQuality = async (req, res, next) => {
-  const { tankId, phLevel, tds, status, timestamp, userEmail } = req.body;
+  // get tankId either from body OR params
+  const tankId = req.body.tankId || req.params.tankId;
+
+  const { phLevel, tds, status, timestamp, userEmail } = req.body;
+
+  // Validate required fields
+  if (!tankId || phLevel === undefined || tds === undefined || !status) {
+    return res.status(400).json({ 
+      message: "Missing required fields. Please provide tankId, phLevel, tds, and status." 
+    });
+  }
+
+  // Validate data types and ranges
+  if (typeof phLevel !== 'number' || phLevel < 0 || phLevel > 14) {
+    return res.status(400).json({ 
+      message: "PH Level must be a number between 0 and 14." 
+    });
+  }
+
+  if (typeof tds !== 'number' || tds < 0 || tds > 1000) {
+    return res.status(400).json({ 
+      message: "TDS must be a number between 0 and 1000." 
+    });
+  }
+
+  if (!['Safe', 'Unsafe', 'safe', 'unsafe'].includes(status)) {
+    return res.status(400).json({ 
+      message: "Status must be either 'Safe' or 'Unsafe'." 
+    });
+  }
 
   try {
     const newRecord = new WaterQuality({
@@ -64,21 +93,34 @@ const addWaterQuality = async (req, res, next) => {
       phLevel,
       tds,
       status,
-      timestamp,
+      timestamp: timestamp || new Date(),
     });
     await newRecord.save();
 
     // 🔹 Send alert if status is unsafe
     if (status.toLowerCase() === "unsafe") {
       const subject = `⚠️ Water Quality Alert for Tank ${tankId}`;
-      const message = `The water quality status for tank ${tankId} is unsafe.\nPH: ${phLevel}, TDS: ${tds}`;
-      if (userEmail) {
-        await sendEmail(userEmail, subject, message);
+      const message = `URGENT: Water Quality Alert!\n\nTank ID: ${tankId}\nStatus: ${status}\nPH Level: ${phLevel}\nTDS: ${tds}\nTime: ${new Date().toLocaleString()}\n\nPlease take immediate action to address the water quality issue.`;
+      
+      // Send email to admin and user if provided
+      const adminEmail = "johancosta08@gmail.com"; // Admin email
+      try {
+        await sendEmail(adminEmail, subject, message);
+        console.log("✅ Water quality alert email sent to admin");
+        
+        if (userEmail && userEmail !== adminEmail) {
+          await sendEmail(userEmail, subject, message);
+          console.log("✅ Water quality alert email sent to user");
+        }
+      } catch (emailError) {
+        console.error("❌ Error sending water quality alert email:", emailError);
+        // Don't fail the request if email fails
       }
     }
 
     res.status(201).json(newRecord);
   } catch (err) {
+    console.error("Error adding water quality record:", err);
     res.status(500).json({ message: err.message });
   }
 };
