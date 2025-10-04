@@ -24,7 +24,7 @@ async function sendEmail(to, tankId, status, measurement) {
 
     // Generate professional HTML content
     const htmlContent = `
-      <h2>⚠️ Water Quality Alert</h2>
+      <h2>⚠️ Water Tank Alert</h2>
       <p>Hello Team,</p>
       <p><b>Tank:</b> ${tankId}</p>
       <p><b>Status:</b> <span style="color:${status === "Normal" ? "green" : "red"}">${status}</span></p>

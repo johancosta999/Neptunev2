@@ -36,25 +36,25 @@ const getById = async (req, res, next) => {
   return res.status(200).json({ record });
 };
 
-const sendWhatsAppMessage = async (phoneNumber, message) => {
-  const url = 'https://graph.facebook.com/v13.0/YOUR_PHONE_NUMBER_ID/messages';
-  const data = {
-    messaging_product: 'whatsapp',
-    to: phoneNumber,
-    text: { body: message },
-  };
-  const headers = {
-    Authorization: `Bearer YOUR_ACCESS_TOKEN`,
-    'Content-Type': 'application/json',
-  };
+// const sendWhatsAppMessage = async (phoneNumber, message) => {
+//   const url = 'https://graph.facebook.com/v13.0/YOUR_PHONE_NUMBER_ID/messages';
+//   const data = {
+//     messaging_product: 'whatsapp',
+//     to: phoneNumber,
+//     text: { body: message },
+//   };
+//   const headers = {
+//     Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+//     'Content-Type': 'application/json',
+//   };
 
-  try {
-    const response = await axios.post(url, data, { headers });
-    console.log('Message sent:', response.data);
-  } catch (error) {
-    console.error('Error sending message:', error);
-  }
-};
+//   try {
+//     const response = await axios.post(url, data, { headers });
+//     console.log('Message sent:', response.data);
+//   } catch (error) {
+//     console.error('Error sending message:', error);
+//   }
+// };
 
 const addWaterQuality = async (req, res, next) => {
   // get tankId either from body OR params

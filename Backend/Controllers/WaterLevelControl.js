@@ -1,5 +1,6 @@
 const WaterLevelModel = require("../Model/WaterLevelModel");
 const Waterlevel = require("../Model/WaterLevelModel");
+const Seller = require("../Model/sellerModel");
 const sendEmail = require("../Utils/sendEmail");
 
 const getallWaterlevel = async (req, res, next) => {
@@ -44,19 +45,25 @@ const addWaterLevel = async (req, res, next) => {
     // 🔹 Send alert if water level is below 25%
     const percentage = (currentLevel / maxCapacity) * 100;
     if (percentage < 25) {
-      const subject = `🚨 Low Water Level Alert for Tank ${tankId}`;
-      const message = `URGENT: Low Water Level Alert!\n\nTank ID: ${tankId}\nCurrent Level: ${currentLevel}L\nMax Capacity: ${maxCapacity}L\nPercentage: ${percentage.toFixed(1)}%\nLocation: ${location || 'Not specified'}\nTime: ${new Date().toLocaleString()}\n\nWater level is critically low. Please refill the tank immediately.`;
-      
-      // Send email to admin and user if provided
-      const adminEmail = "johancosta08@gmail.com"; // Admin email
       try {
-        await sendEmail(adminEmail, subject, message);
+        // Find the customer associated with this tank
+        const customer = await Seller.findOne({ tankId: tankId });
+        
+        if (customer && customer.customerEmail) {
+          // Send email to the specific customer
+          const measurement = `Current Level: ${currentLevel}L (${percentage.toFixed(1)}% of ${maxCapacity}L)`;
+          await sendEmail(customer.customerEmail, tankId, "Low Water Level", measurement);
+          console.log(`✅ Low water level alert email sent to customer: ${customer.customerName} (${customer.customerEmail})`);
+        } else {
+          console.log(`⚠️ No customer found for tank ${tankId} or no email address`);
+        }
+        
+        // Also send to admin for monitoring
+        const adminEmail = "johancosta08@gmail.com";
+        const adminMeasurement = `Current Level: ${currentLevel}L (${percentage.toFixed(1)}% of ${maxCapacity}L)`;
+        await sendEmail(adminEmail, tankId, "Low Water Level", adminMeasurement);
         console.log("✅ Low water level alert email sent to admin");
         
-        if (userEmail && userEmail !== adminEmail) {
-          await sendEmail(userEmail, subject, message);
-          console.log("✅ Low water level alert email sent to user");
-        }
       } catch (emailError) {
         console.error("❌ Error sending low water level alert email:", emailError);
         // Don't fail the request if email fails
