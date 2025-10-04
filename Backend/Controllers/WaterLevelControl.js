@@ -1,5 +1,7 @@
 const WaterLevelModel = require("../Model/WaterLevelModel");
 const Waterlevel = require("../Model/WaterLevelModel");
+const Seller = require("../Model/sellerModel");
+const sendEmail = require("../Utils/sendEmail");
 
 const getallWaterlevel = async (req, res, next) => {
   const { tankId } = req.query;
@@ -26,7 +28,7 @@ const getallWaterlevel = async (req, res, next) => {
 
 //insert data
 const addWaterLevel = async (req, res, next) => {
-  const { tankId, currentLevel, maxCapacity, location, status, recordedAt } =
+  const { tankId, currentLevel, maxCapacity, location, status, recordedAt, userEmail } =
     req.body;
 
   try {
@@ -36,11 +38,41 @@ const addWaterLevel = async (req, res, next) => {
       maxCapacity,
       location,
       status,
-      recordedAt,
+      recordedAt: recordedAt || new Date(),
     });
     await newRecord.save();
+
+    // 🔹 Send alert if water level is below 25%
+    const percentage = (currentLevel / maxCapacity) * 100;
+    if (percentage < 25) {
+      try {
+        // Find the customer associated with this tank
+        const customer = await Seller.findOne({ tankId: tankId });
+        
+        if (customer && customer.customerEmail) {
+          // Send email to the specific customer
+          const measurement = `Current Level: ${currentLevel}L (${percentage.toFixed(1)}% of ${maxCapacity}L)`;
+          await sendEmail(customer.customerEmail, tankId, "Low Water Level", measurement);
+          console.log(`✅ Low water level alert email sent to customer: ${customer.customerName} (${customer.customerEmail})`);
+        } else {
+          console.log(`⚠️ No customer found for tank ${tankId} or no email address`);
+        }
+        
+        // Also send to admin for monitoring
+        const adminEmail = "johancosta08@gmail.com";
+        const adminMeasurement = `Current Level: ${currentLevel}L (${percentage.toFixed(1)}% of ${maxCapacity}L)`;
+        await sendEmail(adminEmail, tankId, "Low Water Level", adminMeasurement);
+        console.log("✅ Low water level alert email sent to admin");
+        
+      } catch (emailError) {
+        console.error("❌ Error sending low water level alert email:", emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
     res.status(200).json(newRecord);
   } catch (err) {
+    console.error("Error adding water level record:", err);
     res.status(500).json({ message: err.message });
   }
 };
