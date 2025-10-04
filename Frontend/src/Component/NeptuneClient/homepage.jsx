@@ -4,7 +4,13 @@ import { Link } from "react-router-dom";
 import "./homepage.css"; // Modern liquid glass styles
 
 // 🔹 Enhanced Nav Component with Modern Design
-function Nav({ tankId, onProfileClick }) {
+function Nav({ tankId, onProfileClick, profilePicUrl }) {
+  // Ensure correct URL for local images
+  let displayPic = profilePicUrl;
+if (displayPic && !displayPic.startsWith("http")) {
+  displayPic = `http://localhost:5000${displayPic}`;
+}
+
   return (
     <nav className="navbar">
       <div className="nav-brand">
@@ -21,20 +27,26 @@ function Nav({ tankId, onProfileClick }) {
           <div className="nav-icon">💰</div>
           <span>Billing</span>
         </Link>
-
         <Link to={"/client/water-quality"} className="nav-link">
           <div className="nav-icon">🦠</div>
           <span>Water Quality</span>
         </Link>
-
         <Link to={"/issues/new"} className="nav-link">
           <div className="nav-icon">⚠️</div>
           <span>Issues</span>
         </Link>
       </ul>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button className="profile-btn" onClick={onProfileClick} style={{marginRight: 8}}>
-          <span role="img" aria-label="profile">👤</span> Profile
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        {/* Profile Pic Container */}
+        <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: '2px solid #06b6d4', background: '#e0f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+          {displayPic ? (
+            <img src={displayPic} alt="Profile" style={{ width: 40, height: 40, objectFit: 'cover' }} />
+          ) : (
+            <span role="img" aria-label="profile" style={{ fontSize: 24 }}>👤</span>
+          )}
+        </div>
+        <button className="profile-btn" onClick={onProfileClick} style={{marginRight: 8, display: 'flex', alignItems: 'center', gap: 6}}>
+          Profile
         </button>
         <Link to={"/"}>
           <button className="logout-btn">
@@ -47,13 +59,55 @@ function Nav({ tankId, onProfileClick }) {
   );
 }
 // Customer Profile Modal
-function ProfileModal({ isOpen, onClose }) {
+function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfilePicUrl }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [picFile, setPicFile] = useState(null);
+  const [picPreview, setPicPreview] = useState(profilePicUrl || "");
+  const [picChanged, setPicChanged] = useState(false);
+  const [savingPic, setSavingPic] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState("");
+
+  useEffect(() => {
+    setPicPreview(profilePicUrl || "");
+  }, [profilePicUrl]);
 
   if (!isOpen) return null;
+
+  const handlePicChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPicFile(file);
+      setPicPreview(URL.createObjectURL(file));
+      setPicChanged(true);
+      setUploadMsg("");
+    }
+  };
+
+  const handlePicSave = async () => {
+    if (!picFile) return;
+    setSavingPic(true);
+    setUploadMsg("");
+    const formData = new FormData();
+    formData.append("profilePic", picFile);
+    try {
+      const res = await axios.post(`http://localhost:5000/api/sellers/${tankDetails.tankId}/profile-pic`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      // Ensure correct URL for local images
+      let url = res.data.url;
+      if (url && url.startsWith('/uploads/')) {
+        url = `${window.location.origin}${url}`;
+      }
+      setProfilePicUrl(url);
+      setUploadMsg("Profile picture updated!");
+      setPicChanged(false);
+    } catch (err) {
+      setUploadMsg("Failed to upload profile picture.");
+    } finally {
+      setSavingPic(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,9 +117,7 @@ function ProfileModal({ isOpen, onClose }) {
       return;
     }
     try {
-      // Replace with your actual API endpoint and user identification logic
-      const userId = localStorage.getItem("userId");
-      await axios.put(`http://localhost:5000/api/sellers/${userId}/password`, {
+      await axios.put(`http://localhost:5000/api/sellers/${tankDetails.tankId}/password`, {
         currentPassword,
         newPassword
       });
@@ -86,6 +138,31 @@ function ProfileModal({ isOpen, onClose }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
+          {/* Upload/Success/Fail message at top */}
+          {uploadMsg && (
+            <div style={{marginBottom: 12, color: uploadMsg.includes('success') || uploadMsg.includes('updated') ? 'green' : 'red', fontWeight: 500, textAlign: 'center'}}>{uploadMsg}</div>
+          )}
+          {message && (
+            <div style={{marginBottom: 12, color: message.includes('success') ? 'green' : 'red', fontWeight: 500, textAlign: 'center'}}>{message}</div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
+            <img src={picPreview || '/default-profile.png'} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid #06b6d4', marginBottom: 8 }} />
+            <input type="file" accept="image/*" onChange={handlePicChange} />
+            <button type="button" className="btn-primary" style={{ marginTop: 8 }} onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? 'Saving...' : 'Save'}</button>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div><b>Name:</b> {tankDetails?.customerName || '--'}</div>
+            <div><b>Phone:</b> {tankDetails?.contactNumber || '--'}</div>
+            <div><b>Email:</b> {tankDetails?.customerEmail || '--'}</div>
+            <div><b>Tank Capacity:</b> {tankDetails?.capacity || '--'}L {(() => {
+              const cap = Number(tankDetails?.capacity);
+              if (cap <= 500) return '(Small)';
+              if (cap <= 1000) return '(Medium)';
+              if (cap <= 2000) return '(Large)';
+              if (cap > 2000) return '(Extra Large)';
+              return '';
+            })()}</div>
+          </div>
           <form onSubmit={handleSubmit} className="profile-form">
             <label>Current Password</label>
             <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
@@ -94,7 +171,6 @@ function ProfileModal({ isOpen, onClose }) {
             <label>Confirm New Password</label>
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
             <button type="submit" className="btn-primary" style={{marginTop: 12}}>Update Password</button>
-            {message && <div style={{marginTop: 8, color: message.includes("success") ? "green" : "red"}}>{message}</div>}
           </form>
         </div>
       </div>
@@ -264,6 +340,7 @@ function HomePage() {
   const [registeredTanks, setRegisteredTanks] = useState([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState("");
 
   useEffect(() => {
     if (!tankId) return;
@@ -273,6 +350,7 @@ function HomePage() {
         // Tank Details
         const tankRes = await axios.get(`http://localhost:5000/api/sellers/${tankId}`);
         setTankDetails(tankRes.data);
+        if (tankRes.data.profilePicUrl) setProfilePicUrl(tankRes.data.profilePicUrl);
 
         // Water Level
         const levelRes = await axios.get(`http://localhost:5000/api/waterlevel?tankId=${tankId}`);
@@ -330,7 +408,7 @@ function HomePage() {
 
   return (
     <div className="homepage-container">
-      <Nav tankId={tankId} onProfileClick={() => setShowProfileModal(true)} />
+      <Nav tankId={tankId} onProfileClick={() => setShowProfileModal(true)} profilePicUrl={profilePicUrl} />
 
       {/* Hero Section */}
       <section className="hero-section">
@@ -479,7 +557,7 @@ function HomePage() {
         onClose={() => setShowUpgradeModal(false)} 
       />
 
-  <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+  <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} tankDetails={tankDetails} profilePicUrl={profilePicUrl} setProfilePicUrl={setProfilePicUrl} />
   <Footer />
     </div>
   );
