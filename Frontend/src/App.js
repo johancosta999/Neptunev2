@@ -10,7 +10,7 @@ import EditWaterQuality from "./Component/WaterQuality/EditWaterQuality";
 import Dashboard from "../src/Component/Home/TankDisplay"
 import TankDashboard from "./Component/Pages/TankDashboard";
 import ClientWaterQuality from "./Component/NeptuneClient/ClientWaterQualityDashboard";
-
+import Invoice from "./Component/Billing/Invoice";
 import AddWaterLevel from "./Component/WaterLevel/AddWater";
 import EditWaterlevel from "./Component/WaterLevel/EditWaterlevel";
 import Waterlevellist from "./Component/WaterLevel/Waterlevellist";
@@ -76,6 +76,7 @@ function App() {
         <Route path="/issues/new" element={<IssueForm />} />
         
         <Route path="/admin/issues/:tankId" element={<IssueListAdmin />} />
+        <Route path="/invoice/:tankId" element={<Invoice />} />
 
              
 
