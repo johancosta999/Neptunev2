@@ -76,7 +76,7 @@ function App() {
         <Route path="/issues/new" element={<IssueForm />} />
         
         <Route path="/admin/issues/:tankId" element={<IssueListAdmin />} />
-        <Route path="/invoice/:tankId" element={<Invoice />} />
+        <Route path="/invoice/:tankId" element={<Invoice />} />""
 
              
 
