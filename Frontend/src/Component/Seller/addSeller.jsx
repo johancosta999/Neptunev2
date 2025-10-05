@@ -100,6 +100,46 @@ export default function AddSeller() {
   const sendRequest = (payload) =>
     axios.post("http://localhost:5000/api/sellers", payload);
 
+  /* ----------------- WhatsApp message ----------------- */
+  const pkgName = (cap) => {
+    const c = String(cap);
+    if (/350/.test(c)) return "AquaLite";
+    if (/500/.test(c)) return "HydroMax";
+    if (/750/.test(c)) return "BlueWave";
+    if (/1000/.test(c)) return "OceanPro";
+    return "Standard";
+  };
+
+  const sendWhatsApp = (phoneRaw, payload) => {
+    try {
+      const digitsOnly = (phoneRaw || "").replace(/\D/g, "");
+      const phone = phoneRaw?.trim().startsWith("+") ? digitsOnly : `94${digitsOnly}`;
+
+      const text =
+        `Hello ${payload.name}! Your tank has been registered.\n` +
+        `Tank ID: ${payload.tankId}\n` +
+        (payload.password ? `Password: ${payload.password}\n` : "") +
+        `Package: ${payload.package}\n` +
+        `Capacity: ${payload.capacity} L\n` +
+        `Warranty: ${payload.warranty} years\n` +
+        `Price: Rs. ${Number(payload.price || 0).toLocaleString()}\n\n` +
+        `You can now log in with your Tank ID${payload.password ? " and password" : ""}.`;
+
+      const base = /Mobi|Android|iPhone/i.test(navigator.userAgent)
+        ? "https://api.whatsapp.com/send"
+        : "https://web.whatsapp.com/send";
+
+      const url = `${base}?phone=${phone}&text=${encodeURIComponent(text)}`;
+      const w = window.open(url, "_blank");
+      if (!w || w.closed || typeof w.closed === "undefined") {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error("WhatsApp open failed:", err);
+    }
+  };
+
+  /* ----------------- submit ----------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -125,6 +165,17 @@ export default function AddSeller() {
       await sendRequest(payload);
       setSavedRecord(payload);
       setMsg("Saved. You can print the bill now.");
+
+      // 👇 Send WhatsApp confirmation to the buyer
+      sendWhatsApp(inputs.contactNumber, {
+        name: inputs.customerName,
+        tankId: inputs.tankId,
+        password: inputs.password,
+        package: pkgName(inputs.capacity),
+        capacity: Number(inputs.capacity || 0),
+        warranty: Number(inputs.warranty || 0),
+        price: Number(inputs.price || 0),
+      });
     } catch (err) {
       console.error(err);
       alert("Failed to add seller");
@@ -154,15 +205,6 @@ export default function AddSeller() {
       setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 250);
   }
-
-  const pkgName = (cap) => {
-    const c = String(cap);
-    if (/350/.test(c)) return "AquaLite";
-    if (/500/.test(c)) return "HydroMax";
-    if (/750/.test(c)) return "BlueWave";
-    if (/1000/.test(c)) return "OceanPro";
-    return "Standard";
-  };
 
   function printInvoice() {
     if (!savedRecord) {
