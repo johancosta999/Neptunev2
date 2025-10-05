@@ -99,7 +99,7 @@ const addWaterQuality = async (req, res, next) => {
     await newRecord.save();
 
     // 🔹 Send alert if status is unsafe
-    if (status.toLowerCase() === "unsafe") {
+    if (status === "unsafe") {
       try {
         // Find the customer associated with this tank
         const customer = await Seller.findOne({ tankId: tankId });
