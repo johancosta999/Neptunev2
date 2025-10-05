@@ -1,3 +1,4 @@
+// src/Component/Client/ClientBillingDashboard.jsx
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import jsPDF from "jspdf";
@@ -92,72 +93,228 @@ function ClientBillingDashboard() {
     pdf.save(`Billing_Report_Tank_${tankId}.pdf`);
   };
 
-  // User-friendly, colorful styles
+  // Dark water theme + strong contrast table (no zebra)
   const styles = {
-    page: { padding: "24px", background: "linear-gradient(120deg,#e0e7ff 0%,#f0fdfa 100%)", minHeight: "100vh" },
-    header: {
-      background: "linear-gradient(90deg,#6366f1 0%,#06b6d4 100%)",
-      color: "#fff",
-      borderRadius: "18px",
-      padding: "32px 24px 24px 24px",
-      marginBottom: 32,
-      boxShadow: "0 4px 24px rgba(99,102,241,0.08)",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center"
+    page: {
+      padding: "20px",
+      minHeight: "100vh",
+      position: "relative",
+      color: "#e6f3ff",
     },
-    avatar: { fontSize: 48, marginBottom: 8 },
-    tankId: { fontWeight: 700, fontSize: 20, letterSpacing: 1 },
-    summaryRow: { display: "flex", gap: 32, justifyContent: "center", margin: "24px 0" },
-    summaryCard: { background: "#fff", borderRadius: 16, boxShadow: "0 2px 8px #06b6d420", padding: 24, minWidth: 180, textAlign: "center" },
-    summaryIcon: { fontSize: 32, marginBottom: 8 },
-    card: { background: "#fff", borderRadius: 16, boxShadow: "0 2px 8px #6366f120", marginBottom: 24, padding: 0 },
-    cardBody: { padding: 24 },
+    header: {
+      background: "linear-gradient(135deg, rgba(34,211,238,.18), rgba(59,130,246,.22))",
+      border: "1px solid rgba(148,163,184,.18)",
+      color: "#e6f3ff",
+      borderRadius: "18px",
+      padding: "28px 22px 20px",
+      margin: "0 auto 22px",
+      maxWidth: 1200,
+      boxShadow: "0 22px 60px rgba(0,0,0,.35)",
+      backdropFilter: "blur(8px)",
+    },
+    avatar: { fontSize: 42, marginBottom: 8, filter: "drop-shadow(0 10px 22px rgba(34,211,238,.35))" },
+    tankId: { fontWeight: 800, fontSize: 18, letterSpacing: .4 },
+    summaryRow: {
+      display: "flex",
+      gap: 16,
+      justifyContent: "center",
+      flexWrap: "wrap",
+      margin: "18px auto 10px",
+      maxWidth: 1200,
+    },
+    summaryCard: {
+      background: "linear-gradient(180deg, rgba(15,23,42,.75), rgba(15,23,42,.6))",
+      border: "1px solid rgba(148,163,184,.18)",
+      borderRadius: 16,
+      boxShadow: "0 18px 50px rgba(0,0,0,.35)",
+      padding: 18,
+      minWidth: 200,
+      textAlign: "center",
+      transition: "transform .25s, box-shadow .25s, border-color .25s",
+    },
+    summaryIcon: { fontSize: 28, marginBottom: 8, filter: "drop-shadow(0 0 14px rgba(34,211,238,.35))" },
+    card: {
+      background: "linear-gradient(180deg, rgba(15,23,42,.78), rgba(15,23,42,.66))",
+      border: "1px solid rgba(148,163,184,.18)",
+      borderRadius: 16,
+      boxShadow: "0 22px 60px rgba(0,0,0,.35)",
+      margin: "0 auto 18px",
+      padding: 0,
+      maxWidth: 1200,
+      overflow: "hidden",
+    },
+    cardBody: { padding: 20 },
     tableWrap: { overflowX: "auto" },
-    table: { width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: 15, borderRadius: 12, overflow: "hidden" },
-    theadTr: { background: "#f0fdfa" },
-    th: { textAlign: "left", padding: "14px 12px", color: "#0e7490", fontWeight: 700, borderBottom: "2px solid #e0e7ff" },
-    td: { padding: "12px", borderBottom: "1px solid #e0e7ff", color: "#334155" },
-    altRow: { background: "#f9fafb" },
-    btnPrimary: { padding: "10px 18px", background: "#6366f1", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer", marginRight: 8 },
-    btnSecondary: { padding: "10px 18px", background: "#06b6d4", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" },
-    progressBarWrap: { background: "#e0e7ff", borderRadius: 8, height: 16, margin: "18px 0" },
-    progressBar: { background: "#6366f1", height: 16, borderRadius: 8 },
-    infoBox: { background: "#f0fdfa", color: "#0e7490", borderRadius: 12, padding: 16, margin: "24px 0", textAlign: "center", fontSize: 15 },
+    table: {
+      width: "100%",
+      borderCollapse: "separate",
+      borderSpacing: 0,
+      fontSize: 15,
+      borderRadius: 12,
+      overflow: "hidden",
+      background: "transparent",
+    },
+    // header row tint kept subtle; the solid header color is applied via CSS below
+    theadTr: { background: "rgba(34,211,238,.08)" },
+    th: {
+      textAlign: "left",
+      padding: "14px 12px",
+      color: "#eaf6ff",
+      fontWeight: 800,
+      borderBottom: "1px solid rgba(148,163,184,.25)",
+    },
+    td: {
+      padding: "12px",
+      borderBottom: "1px solid rgba(148,163,184,.22)",
+      color: "#e6f3ff",
+      background: "transparent",
+    },
+    btnPrimary: {
+      padding: "12px 18px",
+      background: "linear-gradient(135deg,#22d3ee,#60a5fa)",
+      color: "#06222a",
+      border: "1px solid rgba(255,255,255,.18)",
+      borderRadius: 12,
+      fontWeight: 900,
+      cursor: "pointer",
+      marginRight: 10,
+      boxShadow: "0 18px 44px rgba(34,211,238,.25)",
+      transition: "transform .2s",
+    },
+    btnSecondary: {
+      padding: "12px 18px",
+      background: "linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))",
+      color: "#e6f3ff",
+      border: "1px solid rgba(148,163,184,.22)",
+      borderRadius: 12,
+      fontWeight: 900,
+      cursor: "pointer",
+      transition: "transform .2s",
+    },
+    infoBox: {
+      background: "linear-gradient(180deg, rgba(34,197,94,.10), rgba(34,197,94,.06))",
+      color: "#c8fde0",
+      border: "1px solid rgba(34,197,94,.25)",
+      borderRadius: 14,
+      padding: 16,
+      margin: "16px auto 0",
+      textAlign: "center",
+      fontSize: 14,
+      maxWidth: 1200,
+    },
   };
 
   return (
-    <div style={styles.page}>
-      {/* Colorful header */}
-      <div style={styles.header}>
-        <div style={styles.avatar}>💧</div>
-        <h1 style={{ fontWeight: 800, fontSize: 28, margin: 0 }}>Your Billing Dashboard</h1>
-        <div style={styles.tankId}>Tank ID: {tankId}</div>
-        <div style={{ fontSize: 18, marginTop: 8 }}>{tankDetails?.customerName ? `Welcome, ${tankDetails.customerName}!` : ""}</div>
+    <div className="billing-page" style={styles.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap');
+        .billing-page{
+          background:
+            radial-gradient(1200px 600px at -15% -10%, rgba(34,211,238,.16), transparent 60%),
+            radial-gradient(900px 500px at 110% 0%, rgba(96,165,250,.14), transparent 55%),
+            linear-gradient(135deg,#0a0f1e 0%,#0a1726 45%,#0b1d31 100%);
+          font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+          overflow-x: hidden;
+          isolation:isolate;
+        }
+        .billing-page::before,.billing-page::after{
+          content:"";position:fixed;inset:-20vmax;z-index:-1;
+          background:
+            radial-gradient(32vmax 32vmax at 20% 20%, rgba(34,211,238,.12), transparent 60%),
+            radial-gradient(28vmax 28vmax at 80% 10%, rgba(96,165,250,.12), transparent 60%),
+            radial-gradient(26vmax 26vmax at 60% 80%, rgba(59,130,246,.10), transparent 60%);
+          filter:blur(48px) saturate(120%);
+          animation:aurora 28s linear infinite;
+          opacity:.9;
+        }
+        .billing-page::after{animation-duration:36s;animation-direction:reverse;opacity:.6}
+        @keyframes aurora{
+          0%{transform:translate3d(0,0,0) rotate(0)}
+          50%{transform:translate3d(2%,-1%,0) rotate(180deg)}
+          100%{transform:translate3d(0,0,0) rotate(360deg)}
+        }
+        .card-neo:hover{transform:translateY(-3px);box-shadow:0 24px 68px rgba(34,211,238,.16);border-color:rgba(148,163,184,.35)}
+        .btn-press:hover{transform:translateY(-1.5px)}
+        .brand-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.06);color:#9ddcff;font-weight:800}
+        .title-glow{color:#e6f3ff;text-shadow:0 10px 30px rgba(0,0,0,.45)}
+        .subtle{color:#a9c4e0}
+
+        /* 🔥 Strong, readable table with NO zebra rows */
+        .billing-table {
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(3,7,18,.50);
+          border: 1px solid rgba(148,163,184,.18);
+        }
+        .billing-table thead tr {
+          background: linear-gradient(180deg,#2563eb,#1d4ed8);
+        }
+        .billing-table th {
+          color: #eaf6ff !important;
+          font-weight: 900;
+          letter-spacing: .2px;
+        }
+        .billing-table tbody tr {
+          background: rgba(2,6,23,.78); /* same background for every row (no zebra) */
+        }
+        .billing-table tbody tr + tr {
+          border-top: 1px solid rgba(148,163,184,.22);
+        }
+        .billing-table td {
+          color: #f1fbff !important;   /* brighter text */
+        }
+        .billing-table tbody tr:hover {
+          background: rgba(2,6,23,.92);
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="card-neo" style={styles.header}>
+        <div className="brand-chip" style={{ marginBottom: 8 }}>
+          <span style={{ filter: "drop-shadow(0 0 12px rgba(34,211,238,.55))" }}>💧</span> Neptune Billing
+        </div>
+        <h1 className="title-glow" style={{ fontWeight: 900, fontSize: 28, margin: 0 }}>
+          Your Billing Dashboard
+        </h1>
+        <div style={styles.tankId}>Tank ID: <span style={{ color: "#9ddcff" }}>{tankId}</span></div>
+        <div className="subtle" style={{ fontSize: 16, marginTop: 6 }}>
+          {tankDetails?.customerName ? `Welcome, ${tankDetails.customerName}!` : ""}
+        </div>
       </div>
 
       {/* Summary cards */}
       <div style={styles.summaryRow}>
-        <div style={styles.summaryCard}>
+        <div className="card-neo" style={styles.summaryCard}>
           <div style={styles.summaryIcon}>🔄</div>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>{weeklySummary.reduce((sum, row) => sum + row.refillCycles, 0)}</div>
-          <div style={{ color: '#64748b' }}>Total Refills</div>
+          <div style={{ fontWeight: 900, fontSize: 20 }}>
+            {weeklySummary.reduce((sum, row) => sum + row.refillCycles, 0)}
+          </div>
+          <div className="subtle">Total Refills</div>
         </div>
-        <div style={styles.summaryCard}>
+        <div className="card-neo" style={styles.summaryCard}>
           <div style={styles.summaryIcon}>💸</div>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>Rs {monthlyBill.total.toFixed(2)}</div>
-          <div style={{ color: '#64748b' }}>This Month's Bill</div>
+          <div style={{ fontWeight: 900, fontSize: 20 }}>
+            Rs {monthlyBill.total.toFixed(2)}
+          </div>
+          <div className="subtle">This Month's Bill</div>
         </div>
       </div>
 
-
       {/* Last Month Bill Card */}
-      <div style={{ maxWidth: 400, margin: '0 auto', marginBottom: 24 }}>
-        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #06b6d420', padding: 24, textAlign: 'center' }}>
-          <div style={{ fontWeight: 700, color: '#6366f1', fontSize: 18, marginBottom: 6 }}>Last Month's Bill</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: '#0e7490' }}>
+      <div style={{ maxWidth: 420, margin: "0 auto 18px" }}>
+        <div className="card-neo" style={{
+          background: "linear-gradient(180deg, rgba(15,23,42,.75), rgba(15,23,42,.6))",
+          border: "1px solid rgba(148,163,184,.18)",
+          borderRadius: 16,
+          boxShadow: "0 18px 50px rgba(0,0,0,.35)",
+          padding: 18,
+          textAlign: "center",
+        }}>
+          <div style={{ fontWeight: 800, color: "#9ddcff", fontSize: 18, marginBottom: 4 }}>
+            Last Month's Bill
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "#22d3ee", textShadow: "0 0 14px rgba(34,211,238,.3)" }}>
             {(() => {
-              // Calculate last month
               const now = new Date();
               const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
               const lastMonthRows = weeklySummary.filter(row => {
@@ -165,22 +322,22 @@ function ClientBillingDashboard() {
                 return rowDate.getMonth() === lastMonth.getMonth() && rowDate.getFullYear() === lastMonth.getFullYear();
               });
               const lastMonthTotal = lastMonthRows.reduce((sum, row) => sum + row.price, 0);
-              return lastMonthRows.length > 0 ? `Rs ${lastMonthTotal.toFixed(2)}` : '--';
+              return lastMonthRows.length > 0 ? `Rs ${lastMonthTotal.toFixed(2)}` : "--";
             })()}
           </div>
         </div>
       </div>
 
       {/* Table card */}
-      <div style={styles.card}>
+      <div className="card-neo" style={styles.card}>
         <div style={styles.cardBody} ref={reportRef}>
-          <div style={{ textAlign: 'center', marginBottom: 18 }}>
-            <img src="/Neptune.png" alt="Brand Logo" style={{ height: 40, marginBottom: 8 }} />
-            <h2 style={{ color: '#6366f1', margin: 0 }}>Billing Details</h2>
-            <div style={{ color: '#64748b', fontSize: 15 }}>Track your water usage and refills</div>
+          <div style={{ textAlign: "center", marginBottom: 14 }}>
+            <img src="/Neptune.png" alt="Brand Logo" style={{ height: 40, marginBottom: 6, filter: "drop-shadow(0 8px 18px rgba(34,211,238,.25))" }} />
+            <h2 style={{ color: "#9ddcff", margin: 0, fontWeight: 900 }}>Billing Details</h2>
+            <div className="subtle" style={{ fontSize: 14 }}>Track your water usage and refills</div>
           </div>
           <div style={styles.tableWrap}>
-            <table style={styles.table}>
+            <table style={styles.table} className="billing-table">
               <thead>
                 <tr style={styles.theadTr}>
                   <th style={styles.th}>Date</th>
@@ -194,7 +351,7 @@ function ClientBillingDashboard() {
                   <tr><td style={styles.td} colSpan="4">Loading...</td></tr>
                 ) : weeklySummary.length > 0 ? (
                   weeklySummary.map(({ date, refillCycles, price }, idx) => (
-                    <tr key={idx} style={idx % 2 === 1 ? styles.altRow : {}}>
+                    <tr key={idx}>
                       <td style={styles.td}>{date}</td>
                       <td style={styles.td}>{tankDetails?.capacity ?? "N/A"}</td>
                       <td style={styles.td}>{refillCycles}</td>
@@ -211,17 +368,23 @@ function ClientBillingDashboard() {
       </div>
 
       {/* Actions */}
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <button style={styles.btnPrimary} onClick={handleGeneratePDF}>Download PDF Bill</button>
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <button className="btn-press" style={styles.btnPrimary} onClick={handleGeneratePDF}>
+          Download PDF Bill
+        </button>
         <Link to="/homepage" style={{ textDecoration: "none" }}>
-          <button style={styles.btnSecondary}>Back to Home</button>
+          <button className="btn-press" style={styles.btnSecondary}>
+            Back to Home
+          </button>
         </Link>
       </div>
 
       {/* Info/help box */}
       <div style={styles.infoBox}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>Need help understanding your bill?</div>
-        <div>Each refill cycle is counted when your tank is filled to 98% or more. Your monthly bill is calculated at Rs 20 per 1000L per refill. For questions, contact support@neptune.com.</div>
+        <div style={{ fontWeight: 900, marginBottom: 4 }}>Need help understanding your bill?</div>
+        <div>
+          Each refill cycle is counted when your tank is filled to 98% or more. Your monthly bill is calculated at Rs 20 per 1000L per refill. For questions, contact <b>support@neptune.com</b>.
+        </div>
       </div>
     </div>
   );
