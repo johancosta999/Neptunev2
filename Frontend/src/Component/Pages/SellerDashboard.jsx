@@ -15,16 +15,14 @@ import {
   Divider,
   Avatar,
   Stack,
-  LinearProgress,
-  MenuItem,
-  Select,
+  Drawer,
+  IconButton,
 } from "@mui/material";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import SearchIcon from "@mui/icons-material/Search";
-import TuneIcon from "@mui/icons-material/Tune";
-import WaterDropIcon from "@mui/icons-material/WaterDrop";
+import CloseIcon from "@mui/icons-material/Close";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -44,185 +42,124 @@ function parseSellDate(dateString) {
 }
 function derivePackageName(record) {
   const source = `${record.description || ""} ${record.capacity || ""}`.toLowerCase();
-  if (source.includes("bluewave")) return "BlueWave";
-  if (source.includes("aqualite")) return "AquaLite";
-  if (source.includes("hydromax")) return "HydroMax";
-  if (source.includes("oceanpro")) return "OceanPro";
+  if (source.includes("bluewave") || /(^|[^0-9])750([^0-9]|$)/.test(source)) return "BlueWave";
+  if (source.includes("aqualite") || /(^|[^0-9])350([^0-9]|$)/.test(source)) return "AquaLite";
+  if (source.includes("hydromax") || /(^|[^0-9])500([^0-9]|$)/.test(source)) return "HydroMax";
+  if (source.includes("oceanpro") || /(^|[^0-9])1000([^0-9]|$)/.test(source)) return "OceanPro";
   if (source.includes("neptune")) return "Neptune";
   return "Standard";
 }
-const initials = (name = "") =>
-  name.trim().length ? name.trim().split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase() : "•";
-
-/* ---------- Seller (green) theme ---------- */
-const g = {
-  deep: "#064E3B",
-  primary: "#059669",
-  accent: "#34D399",
-  mint: "#6EE7B7",
-  light: "#F5FBF8",
-  ink: "rgba(2,6,23,.92)",
-  hair: "rgba(2,6,23,.10)",
-  border: "rgba(5,150,105,.22)",
-};
-
-const hoverLift = {
-  transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease, filter .25s ease",
-  "&:hover": {
-    transform: "translateY(-6px)",
-    boxShadow: "0 24px 40px rgba(2,6,23,.16)",
-    filter: "saturate(1.03)",
-  },
-};
-
-const pkgColor = (name = "Standard") => {
-  const n = String(name).toLowerCase();
-  if (n.includes("aqualite")) return "#60A5FA";
-  if (n.includes("hydromax")) return "#06B6D4";
-  if (n.includes("bluewave")) return "#3B82F6";
-  if (n.includes("oceanpro")) return "#14B8A6";
-  if (n.includes("neptune")) return "#0EA5E9";
-  return "#94A3B8";
-};
-
-/* ---------- atoms ---------- */
-function StatCard({ icon, title, value, gradient, footer }) {
-  return (
-    <Card
-      elevation={0}
-      sx={{
-        borderRadius: 16,
-        border: `1px solid ${g.border}`,
-        background: "linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.90))",
-        position: "relative",
-        overflow: "hidden",
-        ...hoverLift,
-      }}
-    >
-      <CardContent sx={{ p: 2.25 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar
-            sx={{
-              width: 48,
-              height: 48,
-              border: "2px solid rgba(255,255,255,.85)",
-              background: gradient,
-              boxShadow: "0 10px 22px rgba(0,0,0,.12)",
-            }}
-          >
-            {icon}
-          </Avatar>
-          <Box>
-            <Typography variant="overline" sx={{ letterSpacing: 0.4, color: "text.secondary" }}>
-              {title}
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 900, mt: 0.25 }}>
-              {value}
-            </Typography>
-          </Box>
-        </Stack>
-        {footer}
-      </CardContent>
-    </Card>
-  );
+function avatarColor() {
+  return "#0ea5a0";
+}
+function initials(name = "") {
+  const parts = (name || "").trim().split(/\s+/);
+  return (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
 }
 
-/* ---------- view ---------- */
 export default function SellerDashboard() {
   const [records, setRecords] = useState([]);
   const [stockBaseline, setStockBaseline] = useState(50);
   const [search, setSearch] = useState("");
-  const [pkgFilter, setPkgFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("newest");
+  const [selectedTypes, setSelectedTypes] = useState([]); // multi-select
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedBuyer, setSelectedBuyer] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/sellers")
+    axios
+      .get("http://localhost:5000/api/sellers")
       .then((res) => setRecords(res.data.data || []))
-      .catch(console.log);
+      .catch((err) => console.log(err));
   }, []);
 
   const { start: monthStart, end: monthEnd } = useMemo(() => monthBounds(new Date()), []);
 
   const monthly = useMemo(() => {
-    const list = records.filter((r) => {
-      const d = parseSellDate(r.sellDate);
-      return d && d >= monthStart && d <= monthEnd;
-    });
-    const withPkg = list.map((r) => ({
-      ...r,
-      pkg: derivePackageName(r),
-      priceNum: Number(r.price) || 0,
-      d: parseSellDate(r.sellDate),
-    }));
-    const totalRevenue = withPkg.reduce((sum, r) => sum + r.priceNum, 0);
-    return { list: withPkg, totalRevenue };
+    const list = records
+      .map((r) => ({ ...r, parsedDate: parseSellDate(r.sellDate) }))
+      .filter((r) => r.parsedDate && r.parsedDate >= monthStart && r.parsedDate <= monthEnd)
+      .map((r) => ({
+        ...r,
+        pkg: derivePackageName(r),
+        priceNum: Number(r.price) || 0,
+      }))
+      .sort((a, b) => b.parsedDate - a.parsedDate);
+    const totalRevenue = list.reduce((sum, r) => sum + r.priceNum, 0);
+    return { list, totalRevenue };
   }, [records, monthStart, monthEnd]);
 
   const filtered = useMemo(() => {
-    let list = monthly.list;
-    if (pkgFilter !== "All") list = list.filter((r) => r.pkg === pkgFilter);
     const q = search.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (r) =>
-          r.customerName?.toLowerCase().includes(q) ||
-          r.pkg?.toLowerCase().includes(q) ||
-          r.tankId?.toLowerCase().includes(q)
-      );
-    }
-    switch (sortBy) {
-      case "price-desc": list = [...list].sort((a, b) => (b.priceNum || 0) - (a.priceNum || 0)); break;
-      case "price-asc":  list = [...list].sort((a, b) => (a.priceNum || 0) - (b.priceNum || 0)); break;
-      case "name":       list = [...list].sort((a, b) => (a.customerName || "").localeCompare(b.customerName || "")); break;
-      default:           list = [...list].sort((a, b) => (b.d?.getTime() || 0) - (a.d?.getTime() || 0));
-    }
-    return list;
-  }, [monthly.list, search, pkgFilter, sortBy]);
+    return monthly.list.filter((r) => {
+      const byType = selectedTypes.length === 0 ? true : selectedTypes.includes(r.pkg);
+      const bySearch =
+        !q ||
+        r.customerName?.toLowerCase().includes(q) ||
+        r.pkg?.toLowerCase().includes(q) ||
+        r.tankId?.toLowerCase().includes(q) ||
+        r.city?.toLowerCase().includes(q);
+      return byType && bySearch;
+    });
+  }, [monthly.list, search, selectedTypes]);
 
   const soldCount = filtered.length;
-  const baseline = Math.max(0, Number(stockBaseline) || 0);
-  const remainingStock = Math.max(0, baseline - soldCount);
-  const usedPct = baseline ? Math.min(100, Math.round((soldCount / baseline) * 100)) : 0;
+  const remainingStock = Math.max(0, (Number(stockBaseline) || 0) - soldCount);
 
-  const quickFilters = ["All", "AquaLite", "HydroMax", "BlueWave", "OceanPro", "Neptune", "Standard"];
+  const toggleType = (type) => {
+    setSelectedTypes((prev) => {
+      if (type === "All") return [];
+      return prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
+    });
+  };
+
+  const openBuyer = (buyer) => {
+    setSelectedBuyer(buyer);
+    setDrawerOpen(true);
+  };
+
+  const pkgOptions = ["All", "AquaLite", "HydroMax", "BlueWave", "OceanPro"];
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: g.light }}>
-      {/* NAVBAR */}
+    <Box sx={{ minHeight: "100vh", bgcolor: "#0b1020" }}>
+      {/* App Bar - dark gradient */}
       <AppBar
         position="sticky"
-        elevation={0}
         sx={{
-          bgcolor: "rgba(6,78,59,.94)",
-          backdropFilter: "saturate(180%) blur(8px)",
-          borderBottom: "1px solid rgba(255,255,255,.08)",
+          background:
+            "linear-gradient(135deg, #052e2b 0%, #0b4c46 40%, #0f766e 100%)",
+          boxShadow: "0 8px 22px rgba(0,0,0,.35)",
         }}
       >
-        <Toolbar sx={{ justifyContent: "space-between", minHeight: 64 }}>
-          <Stack direction="row" spacing={1.25} alignItems="center">
-            <WaterDropIcon sx={{ color: g.mint }} />
-            <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: 0.3 }}>
-              Neptune — Seller Page
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1.5}>
+        <Toolbar sx={{ justifyContent: "space-between" }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            Neptune – Seller Dashboard
+          </Typography>
+          <Stack direction="row" spacing={2}>
             <Button
               variant="contained"
-              onClick={() => navigate("/add-tank")}
               sx={{
+                bgcolor: "#10b981",
+                color: "#061519",
                 fontWeight: 800,
-                background: `linear-gradient(135deg, ${g.primary} 0%, ${g.mint} 100%)`,
-                boxShadow: "0 10px 22px rgba(16,185,129,.25)",
+                "&:hover": { bgcolor: "#0ea36d" },
               }}
+              onClick={() => navigate("/add-tank")}
             >
               Add Tank
             </Button>
             <Button
               variant="outlined"
               color="inherit"
-              onClick={() => { localStorage.clear(); navigate("/"); }}
-              sx={{ borderColor: "rgba(255,255,255,.6)" }}
+              sx={{
+                borderColor: "rgba(255,255,255,.35)",
+                "&:hover": { borderColor: "#fff", bgcolor: "rgba(255,255,255,.06)" },
+              }}
+              onClick={() => {
+                localStorage.clear();
+                navigate("/");
+              }}
             >
               Logout
             </Button>
@@ -230,102 +167,124 @@ export default function SellerDashboard() {
         </Toolbar>
       </AppBar>
 
-      {/* PAGE BG */}
+      {/* Page background */}
       <Box
         sx={{
           p: { xs: 2, md: 4 },
-          backgroundImage: `
-            radial-gradient(1200px 600px at -15% -20%, ${g.mint}2A, transparent 60%),
-            radial-gradient(900px 500px at 110% 0%, ${g.primary}30, transparent 55%),
-            linear-gradient(135deg, ${g.deep} 0%, ${g.primary} 38%, ${g.accent} 100%)
-          `,
+          background:
+            "radial-gradient(1200px 600px at -15% -20%, rgba(16,185,129,.12), transparent 60%)," +
+            "radial-gradient(900px 500px at 110% 0%, rgba(99,102,241,.10), transparent 55%)," +
+            "linear-gradient(135deg, #0b1020 0%, #0c1b1b 40%, #0d1b2a 100%)",
         }}
       >
-        {/* GLASS CONTAINER */}
+        {/* Main panel - frosted dark */}
         <Paper
-          elevation={18}
+          elevation={0}
           sx={{
-            maxWidth: 1400,
+            maxWidth: 1280,
             mx: "auto",
-            borderRadius: 24,
+            borderRadius: 4,
             p: { xs: 2, md: 4 },
-            background: "rgba(255,255,255,.96)",
-            border: `1px solid ${g.border}`,
+            background: "rgba(17,24,39,0.72)",
+            border: "1px solid rgba(255,255,255,0.06)",
             backdropFilter: "blur(10px)",
-            boxShadow: "0 28px 60px rgba(2,6,23,.22)",
+            color: "#e5e7eb",
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 900 }}>
+          {/* Header */}
+          <Typography variant="h4" sx={{ fontWeight: 900, color: "#f1f5f9" }}>
             Seller Dashboard
           </Typography>
-          <Typography sx={{ opacity: 0.85, mt: 0.5 }}>
+          <Typography sx={{ opacity: 0.75, mt: 0.5 }}>
             Monthly overview for{" "}
             {monthStart.toLocaleString(undefined, { month: "long", year: "numeric" })}
           </Typography>
 
-          {/* KPIs */}
+          {/* Stats */}
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid item xs={12} md={4}>
-              <StatCard
-                icon={<QueryStatsIcon />}
-                title="Tanks sold (month)"
-                value={soldCount}
-                gradient="linear-gradient(135deg,#10B981 0%,#34D399 100%)"
-                footer={
-                  <Box sx={{ mt: 1.25 }}>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                      {baseline ? `${usedPct}% of baseline sold` : "Set a baseline to track"}
-                    </Typography>
-                    <LinearProgress
-                      variant={baseline ? "determinate" : "indeterminate"}
-                      value={baseline ? usedPct : undefined}
-                      sx={{
-                        height: 8, borderRadius: 8, mt: 0.5,
-                        "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg,#10B981,#6EE7B7)" },
-                        backgroundColor: g.hair,
-                      }}
-                    />
-                  </Box>
-                }
-              />
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  bgcolor: "rgba(2,6,23,.6)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,.18)",
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: "#0ea5a0" }}>
+                      <QueryStatsIcon />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="overline" sx={{ color: "#93c5fd" }}>
+                        Tanks Sold (month)
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: "#f8fafc" }}>
+                        {soldCount}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
             <Grid item xs={12} md={4}>
-              <StatCard
-                icon={<Inventory2OutlinedIcon />}
-                title="Stock remaining"
-                value={remainingStock}
-                gradient="linear-gradient(135deg,#059669 0%,#34D399 100%)"
-                footer={
-                  <Box sx={{ mt: 1.25 }}>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                      Baseline: {baseline}
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={baseline ? 100 - usedPct : 0}
-                      sx={{
-                        height: 8, borderRadius: 8, mt: 0.5,
-                        "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg,#22C55E,#A7F3D0)" },
-                        backgroundColor: g.hair,
-                      }}
-                    />
-                  </Box>
-                }
-              />
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  bgcolor: "rgba(2,6,23,.6)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,.18)",
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: "#10b981" }}>
+                      <Inventory2OutlinedIcon />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="overline" sx={{ color: "#a7f3d0" }}>
+                        Stock Remaining
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: "#f8fafc" }}>
+                        {remainingStock}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
             <Grid item xs={12} md={4}>
-              <StatCard
-                icon={<AttachMoneyIcon />}
-                title="Total revenue (month)"
-                value={`Rs. ${monthly.totalRevenue.toLocaleString()}`}
-                gradient="linear-gradient(135deg,#22C55E 0%,#86EFAC 100%)"
-              />
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  bgcolor: "rgba(2,6,23,.6)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,.18)",
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: "#ef4444" }}>
+                      <AttachMoneyIcon />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="overline" sx={{ color: "#fecaca" }}>
+                        Total Revenue (month)
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: "#f8fafc" }}>
+                        Rs. {monthly.totalRevenue.toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
           </Grid>
 
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 3, borderColor: "rgba(148,163,184,.18)" }} />
 
-          {/* CONTROLS (fixed: rectangular, single border) */}
+          {/* Controls */}
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
@@ -333,191 +292,287 @@ export default function SellerDashboard() {
             sx={{ mb: 2 }}
           >
             <TextField
-              autoComplete="off"
-              label="Search by customer, package, or tank ID"
+              label="Search by customer, package, tank ID, or city"
               fullWidth
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              variant="outlined"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon sx={{ color: "#9ca3af" }} />
                   </InputAdornment>
                 ),
-                // kill any native borders/appearance that can create inner lines
-                inputProps: {
-                  style: { border: "0", outline: "0", boxShadow: "none", WebkitAppearance: "none" },
-                },
-                sx: {
-                  height: 52,
-                  borderRadius: "8px !important",                      // force rectangular
-                  background: "#fff",
-                  "& .MuiOutlinedInput-notchedOutline": {               // the real outline element
-                    borderColor: `${g.hair} !important`,
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: `${g.primary} !important`,
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: `${g.accent} !important`,
-                    boxShadow: `0 0 0 2px ${g.accent}55`,
-                  },
-                  "& input": { border: "0 !important", outline: "none !important", boxShadow: "none !important" },
-                },
               }}
               sx={{
-                "& .MuiInputLabel-root": { fontWeight: 700 },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 1.5,
+                  bgcolor: "rgba(2,6,23,.6)",
+                  color: "#e5e7eb",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(148,163,184,.25)",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(203,213,225,.5)",
+                  },
+                },
+                "& .MuiInputLabel-root": { color: "rgba(226,232,240,.7)" },
               }}
             />
-
             <TextField
               label="Stock baseline"
               type="number"
               value={stockBaseline}
               onChange={(e) => setStockBaseline(e.target.value)}
-              variant="outlined"
-              InputProps={{
-                sx: {
-                  height: 52,
-                  borderRadius: "8px !important",
-                  background: "#fff",
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: `${g.hair} !important` },
-                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: `${g.primary} !important` },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: `${g.accent} !important`,
-                    boxShadow: `0 0 0 2px ${g.accent}55`,
+              sx={{
+                minWidth: { xs: "100%", md: 200 },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 1.5,
+                  bgcolor: "rgba(2,6,23,.6)",
+                  color: "#e5e7eb",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(148,163,184,.25)",
                   },
-                  "& input": { border: "0 !important", outline: "none !important", boxShadow: "none !important" },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(203,213,225,.5)",
+                  },
                 },
+                "& .MuiInputLabel-root": { color: "rgba(226,232,240,.7)" },
               }}
-              sx={{ minWidth: { xs: "100%", md: 230 } }}
+              InputProps={{ inputProps: { min: 0 } }}
             />
-
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: { md: "auto" } }}>
-              <TuneIcon sx={{ color: "text.secondary" }} />
-              <Select
-                size="medium"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                sx={{
-                  minWidth: 170,
-                  height: 52,
-                  background: "#fff",
-                  borderRadius: "8px !important",
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: `${g.hair} !important` },
-                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: `${g.primary} !important` },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: `${g.accent} !important`,
-                    boxShadow: `0 0 0 2px ${g.accent}55`,
-                  },
-                }}
-              >
-                <MenuItem value="newest">Newest</MenuItem>
-                <MenuItem value="price-desc">Price: High → Low</MenuItem>
-                <MenuItem value="price-asc">Price: Low → High</MenuItem>
-                <MenuItem value="name">Customer A → Z</MenuItem>
-              </Select>
-            </Stack>
           </Stack>
 
-          {/* QUICK FILTERS */}
+          {/* Type filters */}
           <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap" }}>
-            {["All", "AquaLite", "HydroMax", "BlueWave", "OceanPro", "Neptune", "Standard"].map((name) => {
-              const active = pkgFilter === name;
-              const color = name === "All" ? g.primary : pkgColor(name);
+            {["All", "AquaLite", "HydroMax", "BlueWave", "OceanPro"].map((p) => {
+              const active =
+                p === "All" ? selectedTypes.length === 0 : selectedTypes.includes(p);
               return (
                 <Chip
-                  key={name}
-                  label={name}
-                  onClick={() => setPkgFilter(active ? "All" : name)}
+                  key={p}
+                  label={p}
+                  onClick={() => toggleType(p)}
+                  clickable
                   variant={active ? "filled" : "outlined"}
                   sx={{
-                    borderRadius: 8,
-                    borderColor: `${color}66`,
-                    color: active ? "#0b3b2b" : color,
-                    background: active
-                      ? `linear-gradient(135deg, ${g.primary} 0%, ${g.mint} 100%)`
-                      : "transparent",
-                    fontWeight: 600,
-                    height: 30,
+                    borderRadius: 2,
+                    fontWeight: 800,
+                    color: active ? "#a7f3d0" : "#e5e7eb",
+                    bgcolor: active ? "rgba(16,185,129,.18)" : "rgba(255,255,255,.04)",
+                    borderColor: active ? "rgba(16,185,129,.4)" : "rgba(148,163,184,.25)",
+                    "&:hover": {
+                      bgcolor: active ? "rgba(16,185,129,.26)" : "rgba(255,255,255,.07)",
+                    },
                   }}
                 />
               );
             })}
           </Stack>
 
-          {/* TANK CARDS */}
-          <Grid container spacing={2}>
-            {filtered.map((tank) => {
-              const color = pkgColor(tank.pkg);
-              return (
-                <Grid item xs={12} md={6} lg={4} key={tank._id || tank.tankId}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      minHeight: 190,
-                      borderRadius: 16,
-                      border: `1px solid ${g.border}`,
-                      background: "linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.92))",
-                      position: "relative",
-                      overflow: "hidden",
-                      ...hoverLift,
-                    }}
+          {/* Tanks list */}
+          <Stack spacing={1.5}>
+            {filtered.map((tank) => (
+              <Card
+                key={tank._id || tank.tankId}
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: "rgba(2,6,23,.55)",
+                  color: "#e5e7eb",
+                  border: "1px solid rgba(148,163,184,.18)",
+                  "&:hover": {
+                    boxShadow: "0 10px 26px rgba(0,0,0,.35)",
+                    borderColor: "rgba(16,185,129,.45)",
+                  },
+                  cursor: "pointer",
+                }}
+                onClick={() => openBuyer(tank)}
+              >
+                <CardContent sx={{ py: 1.25 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={2}
+                    justifyContent="space-between"
                   >
-                    <Box sx={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 6, background: color, zIndex: 1 }} />
-                    <CardContent sx={{ position: "relative", zIndex: 2, p: 2.25 }}>
-                      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1 }}>
-                        <Avatar sx={{ width: 36, height: 36, bgcolor: `${color}22`, color, fontWeight: 800 }}>
-                          {initials(tank.customerName)}
-                        </Avatar>
-                        <Typography variant="h6" sx={{ fontWeight: 900, mr: "auto" }}>
-                          {tank.customerName}
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Avatar sx={{ bgcolor: avatarColor(), color: "#052e2b" }}>
+                        {initials(tank.customerName).toUpperCase()}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 900, color: "#f1f5f9" }}>
+                          {tank.customerName || "—"}
                         </Typography>
-                        <Chip
-                          label={tank.pkg}
-                          size="small"
-                          sx={{
-                            color,
-                            borderColor: `${color}80`,
-                            border: "1px solid",
-                            background: `${color}14`,
-                            fontWeight: 700,
-                            borderRadius: 8,
-                          }}
-                        />
-                      </Stack>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+                          <Chip
+                            label={tank.pkg}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              borderRadius: 1.5,
+                              fontWeight: 700,
+                              color: "#a7f3d0",
+                              borderColor: "rgba(16,185,129,.45)",
+                              bgcolor: "rgba(16,185,129,.12)",
+                            }}
+                          />
+                          <Typography variant="body2" sx={{ color: "rgba(226,232,240,.75)" }}>
+                            Tank: <b style={{ color: "#e5e7eb" }}>{tank.tankId}</b> • {tank.capacity}L
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    </Stack>
 
-                      <Typography variant="body2" sx={{ opacity: 0.85 }}>Tank: {tank.tankId}</Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.85 }}>Capacity: {tank.capacity} L</Typography>
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1.5}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                    >
+                      <Typography variant="body2" sx={{ color: "rgba(226,232,240,.7)" }}>
+                        {tank.parsedDate ? tank.parsedDate.toLocaleDateString() : ""}
+                      </Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 900, color: "#f1f5f9" }}>
+                        Rs. {(Number(tank.price) || 0).toLocaleString()}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
 
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-                        <Chip
-                          size="small"
-                          label={`Price: Rs. ${(Number(tank.price) || 0).toLocaleString()}`}
-                          sx={{
-                            bgcolor: "rgba(2,6,23,.04)",
-                            borderColor: "rgba(2,6,23,.12)",
-                            border: "1px solid",
-                            fontWeight: 700,
-                            borderRadius: 8,
-                          }}
-                        />
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-
-          {filtered.length === 0 && (
-            <Box sx={{ textAlign: "center", py: 6, color: "text.secondary" }}>
-              <Typography variant="body1">No tanks match your current filters.</Typography>
-            </Box>
-          )}
+            {filtered.length === 0 && (
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 3,
+                  textAlign: "center",
+                  borderRadius: 2,
+                  borderStyle: "dashed",
+                  color: "rgba(226,232,240,.75)",
+                  bgcolor: "rgba(2,6,23,.5)",
+                  borderColor: "rgba(148,163,184,.25)",
+                }}
+              >
+                No tanks match the current filters.
+              </Paper>
+            )}
+          </Stack>
         </Paper>
       </Box>
+
+      {/* Buyer details drawer - dark */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 420 },
+            bgcolor: "rgba(17,24,39,0.96)",
+            color: "#e5e7eb",
+            borderLeft: "1px solid rgba(255,255,255,0.06)",
+            backdropFilter: "blur(8px)",
+          },
+        }}
+      >
+        <Box sx={{ p: 2.5 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 900, color: "#f1f5f9" }}>
+              Buyer Details
+            </Typography>
+            <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: "#e5e7eb" }}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+
+          {selectedBuyer ? (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar sx={{ bgcolor: avatarColor(), width: 48, height: 48, color: "#052e2b" }}>
+                  {initials(selectedBuyer.customerName).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 900, color: "#f1f5f9" }}>
+                    {selectedBuyer.customerName || "—"}
+                  </Typography>
+                  <Chip
+                    label={selectedBuyer.pkg}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 1.5,
+                      fontWeight: 700,
+                      color: "#a7f3d0",
+                      borderColor: "rgba(16,185,129,.45)",
+                      bgcolor: "rgba(16,185,129,.12)",
+                      mt: 0.5,
+                    }}
+                  />
+                </Box>
+              </Stack>
+
+              <Divider sx={{ borderColor: "rgba(148,163,184,.18)" }} />
+
+              <Stack spacing={1}>
+                <Row k="Tank ID" v={selectedBuyer.tankId} />
+                <Row k="Capacity" v={`${selectedBuyer.capacity} L`} />
+                <Row k="Price" v={`Rs. ${(Number(selectedBuyer.price) || 0).toLocaleString()}`} />
+                <Row k="Warranty" v={`${selectedBuyer.warranty || "—"} years`} />
+                <Row
+                  k="Sell Date"
+                  v={
+                    selectedBuyer.sellDate
+                      ? new Date(selectedBuyer.sellDate).toLocaleDateString()
+                      : "—"
+                  }
+                />
+              </Stack>
+
+              <Divider sx={{ borderColor: "rgba(148,163,184,.18)" }} />
+
+              <Stack spacing={1}>
+                <Row k="Email" v={selectedBuyer.customerEmail} />
+                <Row k="Contact" v={selectedBuyer.contactNumber} />
+                <Row k="Address" v={selectedBuyer.address} />
+                <Row k="City" v={selectedBuyer.city} />
+                <Row k="Notes" v={selectedBuyer.description} />
+              </Stack>
+
+              <Divider sx={{ borderColor: "rgba(148,163,184,.18)" }} />
+
+              <Button
+                variant="contained"
+                sx={{
+                  bgcolor: "#10b981",
+                  color: "#03221f",
+                  fontWeight: 800,
+                  "&:hover": { bgcolor: "#0ea36d" },
+                }}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Close
+              </Button>
+            </Stack>
+          ) : (
+            <Typography sx={{ mt: 2, color: "rgba(226,232,240,.75)" }}>
+              Select a buyer from the list to see details.
+            </Typography>
+          )}
+        </Box>
+      </Drawer>
     </Box>
+  );
+}
+
+/* Simple key:value row for drawer */
+function Row({ k, v }) {
+  return (
+    <Stack direction="row" justifyContent="space-between" spacing={2}>
+      <Typography variant="body2" sx={{ color: "rgba(226,232,240,.7)" }}>
+        {k}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 700, color: "#f8fafc" }}>
+        {v || "—"}
+      </Typography>
+    </Stack>
   );
 }
