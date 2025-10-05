@@ -1,16 +1,167 @@
+// HomePage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import "./homepage.css"; // Modern liquid glass styles
 
-// 🔹 Enhanced Nav Component with Modern Design
-function Nav({ tankId, onProfileClick, profilePicUrl }) {
-  // Ensure correct URL for local images
-  let displayPic = profilePicUrl;
-if (displayPic && !displayPic.startsWith("http")) {
-  displayPic = `http://localhost:5000${displayPic}`;
+/* ---------------------------------------------
+   Water-themed Dark UI styles injected inline
+---------------------------------------------- */
+const WaterThemeStyles = () => (
+  <style>{`
+/* Font & base reset */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+
+:root{
+  --ink-900:#0a0f1e; --glass-strong:#0b1224f0; --card:#0e162d; --line:#1d2d4a;
+  --text:#e6f3ff; --muted:#9fb8d3; --brand:#22d3ee; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
 }
 
+/* Animated background */
+.homepage-container{
+  position:relative;min-height:100vh;overflow-x:hidden;
+  background:
+    radial-gradient(1200px 600px at -15% -10%, rgba(34,211,238,.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 0%, rgba(96,165,250,.16), transparent 55%),
+    linear-gradient(135deg, #0a0f1e 0%, #0a1726 45%, #0b1d31 100%);
+  isolation:isolate;
+}
+.homepage-container::before,.homepage-container::after{
+  content:"";position:fixed;inset:-20vmax;
+  background:
+    radial-gradient(35vmax 35vmax at 20% 20%, rgba(34,211,238,.12), transparent 60%),
+    radial-gradient(30vmax 30vmax at 80% 10%, rgba(96,165,250,.12), transparent 60%),
+    radial-gradient(28vmax 28vmax at 60% 80%, rgba(59,130,246,.10), transparent 60%);
+  filter:blur(45px) saturate(120%);z-index:-2;animation:aurora 26s linear infinite;opacity:.9
+}
+.homepage-container::after{animation-duration:34s;animation-direction:reverse;opacity:.6}
+@keyframes aurora{0%{transform:translate3d(0,0,0) rotate(0)}50%{transform:translate3d(2%,-1%,0) rotate(180deg)}100%{transform:translate3d(0,0,0) rotate(360deg)}}
+
+/* Navbar */
+.navbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;background:linear-gradient(180deg, rgba(9,14,28,.8), rgba(9,14,28,.55));backdrop-filter:blur(10px);border-bottom:1px solid #0f1f3b}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.brand-icon{font-size:22px;filter:drop-shadow(0 2px 8px rgba(34,211,238,.6))}
+.brand{font-size:20px;font-weight:900;letter-spacing:.3px;color:#dff7ff;margin:0}
+.brand-tagline{color:#9fb8d3;font-size:12px;margin-left:6px}
+.nav-links{display:flex;align-items:center;gap:10px;padding:0;margin:0}
+.nav-link{display:flex;align-items:center;gap:8px;padding:10px 12px;color:#d9eeff;text-decoration:none;border:1px solid rgba(145,177,208,.15);background:linear-gradient(180deg, rgba(14,22,45,.7), rgba(14,22,45,.55));border-radius:12px;transition:.25s}
+.nav-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(34,211,238,.12);border-color:rgba(145,177,208,.3)}
+.nav-icon{filter:drop-shadow(0 0 18px rgba(34,211,238,.35))}
+.profile-btn,.logout-btn{height:40px;padding:0 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid rgba(145,177,208,.15);background:linear-gradient(180deg, rgba(14,22,45,.7), rgba(14,22,45,.55));color:#dff7ff;transition:.25s}
+.profile-btn:hover,.logout-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(96,165,250,.12)}
+.logout-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(180deg, rgba(220,38,38,.16), rgba(220,38,38,.06));border-color:rgba(220,38,38,.25)}
+
+/* Hero */
+.hero-section{max-width:1200px;margin:18px auto 8px;padding:18px;border:1px solid rgba(145,177,208,.14);background:linear-gradient(180deg, rgba(15,23,42,.7), rgba(15,23,42,.5));border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.hero-content{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px}
+.hero-title{margin:0 0 6px;font-size:clamp(26px,3.6vw,46px);line-height:1.08;font-weight:900;letter-spacing:.3px;color:#e7f7ff;text-shadow:0 10px 30px rgba(0,0,0,.45)}
+.hero-tank-id{color:#22d3ee;text-shadow:0 0 18px rgba(34,211,238,.55),0 8px 26px rgba(34,211,238,.18)}
+.hero-subtitle{margin:0;color:#a9c4e0;font-weight:600}
+.tank-visual{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid rgba(145,177,208,.14);background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(145,177,208,.05),0 18px 50px rgba(0,0,0,.35);animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.tank-icon{font-size:64px;filter:drop-shadow(0 12px 30px rgba(96,165,250,.3))}
+.tank-info{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;color:#dff7ff}
+.hero-actions{display:flex;gap:12px;padding:0 18px 12px;flex-wrap:wrap}
+.hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:900;text-decoration:none;border:1px solid transparent;transition:.25s}
+.hero-btn.primary{color:#071d21;background:linear-gradient(135deg, #22d3ee, #60a5fa);box-shadow:0 18px 44px rgba(34,211,238,.28),inset 0 0 0 1px rgba(255,255,255,.2)}
+.hero-btn.secondary{color:#dff7ff;border-color:rgba(145,177,208,.2);background:linear-gradient(180deg, rgba(14,22,45,.7), rgba(14,22,45,.55))}
+.hero-btn:hover{transform:translateY(-2px) scale(1.01);filter:saturate(110%)}
+
+/* Dashboard */
+.dashboard-grid{max-width:1200px;margin:12px auto 24px;padding:0 6px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.dashboard-card{position:relative;overflow:hidden;padding:14px;border-radius:16px;background:linear-gradient(180deg, var(--card), #0b1428);border:1px solid var(--line);color:var(--text);transition:transform .25s, box-shadow .25s, border-color .25s}
+.dashboard-card::after{content:"";position:absolute;inset:-60% -30%;background:conic-gradient(from 180deg at 50% 50%, transparent 0 40%, rgba(34,211,238,.08), rgba(96,165,250,.05), transparent 85% 100%);animation:spin 9s linear infinite;pointer-events:none;z-index:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dashboard-card:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(34,211,238,.14);border-color:rgba(145,177,208,.35)}
+.card-header{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.card-icon{font-size:22px;filter:drop-shadow(0 0 14px rgba(34,211,238,.35))}
+.card-content{margin-top:10px;position:relative;z-index:1}
+.metric-value{font-size:28px;font-weight:900;letter-spacing:.3px}
+.metric-subtitle{color:#9fb8d3;font-weight:600}
+.level-bar{height:8px;border-radius:999px;background:#0f1f3b;overflow:hidden;border:1px solid var(--line);margin-top:8px}
+.level-fill{height:100%;border-radius:999px;background:var(--ok);transition:width .5s}
+.status-indicator{display:flex;align-items:center;gap:8px}
+.status-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 14px currentColor}
+.status-text{font-weight:800}
+.issues-list{display:flex;flex-direction:column;gap:8px}
+.issue-item{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;background:rgba(255,255,255,.03);border:1px dashed rgba(145,177,208,.25);padding:8px;border-radius:10px}
+.issue-priority{font-weight:900;font-size:12px;color:#ffe8a3}
+.issue-text{color:#dfefff}
+.view-all-link{margin-top:6px;display:inline-block;color:#9ddcff;text-decoration:none;font-weight:800}
+.view-all-link:hover{text-decoration:underline}
+.loading-state{color:#9fb8d3}
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:8px;color:#9fb8d3}
+.empty-icon{font-size:26px}
+
+/* Registered tanks */
+.registered-tanks-section{max-width:1200px;margin:10px auto 36px;padding:0 6px}
+.section-header{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.section-title{margin:0;font-weight:900;letter-spacing:.3px}
+.section-subtitle{margin:0;color:#9fb8d3}
+.tanks-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.tank-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;padding:10px;background:linear-gradient(180deg, #0e162d, #0a1326);transition:.25s}
+.tank-card:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(96,165,250,.12);border-color:rgba(145,177,208,.35)}
+.tank-header{display:flex;align-items:center;justify-content:space-between}
+.tank-status{width:10px;height:10px;border-radius:50%}
+.tank-status.online{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.tank-details{margin-top:8px}
+.customer-name{margin:0 0 2px;font-size:14px;font-weight:800;color:#e6f3ff}
+.tank-id,.tank-location{margin:0;color:#9fb8d3;font-size:12px}
+.tank-card.loading{background:linear-gradient(90deg,#0e1428 25%,#111a33 37%,#0e1428 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-color:transparent}
+.tank-skeleton{height:64px;border-radius:10px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,.65), rgba(3,7,18,.75));backdrop-filter:blur(2px)}
+.modal-content{width:min(680px,92vw);background:var(--glass-strong);border:1px solid rgba(145,177,208,.2);border-radius:16px;color:var(--text);padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:pop .2s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid rgba(145,177,208,.18)}
+.modal-close{height:34px;width:34px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:rgba(255,255,255,.06);color:#e6f3ff;font-weight:900;cursor:pointer}
+.modal-body{padding-top:12px}
+.profile-form{display:grid;gap:8px}
+.profile-form input{height:40px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:#0b1326;color:#dff7ff;padding:0 10px;outline:none}
+.btn-primary,.btn-secondary{height:40px;padding:0 14px;border-radius:12px;font-weight:800;cursor:pointer;border:1px solid transparent}
+.btn-primary{background:linear-gradient(135deg,#22d3ee,#60a5fa);color:#06222a}
+.btn-secondary{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));color:#e6f3ff;border-color:rgba(145,177,208,.25)}
+.btn-primary:hover,.btn-secondary:hover{transform:translateY(-2px)}
+
+/* Footer */
+.footer{margin-top:28px;border-top:1px solid rgba(145,177,208,.18);background:linear-gradient(180deg, rgba(9,14,28,.6), rgba(9,14,28,.45))}
+.footer-content{max-width:1200px;margin:0 auto;padding:18px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.footer-logo{display:flex;align-items:center;gap:8px}
+.footer-tagline{color:#9fb8d3;margin:6px 0 0}
+.footer-section h4{margin:0 0 6px}
+.footer-section a{display:block;text-decoration:none;color:#cdeaff;margin:3px 0;opacity:.9}
+.footer-section a:hover{opacity:1;text-decoration:underline}
+.footer-bottom{text-align:center;color:#9fb8d3;padding:10px;border-top:1px solid rgba(145,177,208,.18)}
+
+/* Responsive */
+@media (max-width:1100px){
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .tanks-grid{grid-template-columns:repeat(3,1fr)}
+  .hero-content{flex-direction:column;align-items:flex-start}
+}
+@media (max-width:680px){
+  .nav-links{display:none}
+  .dashboard-grid{grid-template-columns:1fr}
+  .tanks-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Scrollbar (webkit) */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#133157,#0f2342);border-radius:999px}
+*::-webkit-scrollbar-track{background:transparent}
+  `}</style>
+);
+
+/* ------------------------ NAV ------------------------ */
+function Nav({ onProfileClick, profilePicUrl }) {
+  let displayPic = profilePicUrl;
+  if (displayPic && !displayPic.startsWith("http")) {
+    displayPic = `http://localhost:5000${displayPic}`;
+  }
   return (
     <nav className="navbar">
       <div className="nav-brand">
@@ -19,47 +170,27 @@ if (displayPic && !displayPic.startsWith("http")) {
         <span className="brand-tagline">Smart Water System</span>
       </div>
       <ul className="nav-links">
-        <Link to={`/client/water-level`} className="nav-link">
-          <div className="nav-icon">💧</div>
-          <span>Water Level</span>
-        </Link>
-        <Link to={`/client/billing`} className="nav-link">
-          <div className="nav-icon">💰</div>
-          <span>Billing</span>
-        </Link>
-        <Link to={"/client/water-quality"} className="nav-link">
-          <div className="nav-icon">🦠</div>
-          <span>Water Quality</span>
-        </Link>
-        <Link to={"/issues/new"} className="nav-link">
-          <div className="nav-icon">⚠️</div>
-          <span>Issues</span>
-        </Link>
+        <Link to="/client/water-level" className="nav-link"><div className="nav-icon">💧</div><span>Water Level</span></Link>
+        <Link to="/client/billing" className="nav-link"><div className="nav-icon">💰</div><span>Billing</span></Link>
+        <Link to="/client/water-quality" className="nav-link"><div className="nav-icon">🦠</div><span>Water Quality</span></Link>
+        <Link to="/issues/new" className="nav-link"><div className="nav-icon">⚠️</div><span>Issues</span></Link>
       </ul>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        {/* Profile Pic Container */}
-        <div style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: '2px solid #06b6d4', background: '#e0f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", border: "2px solid #06b6d4", background: "#e0f7fa", display: "flex", alignItems: "center", justifyContent: "center", marginRight: 8 }}>
           {displayPic ? (
-            <img src={displayPic} alt="Profile" style={{ width: 40, height: 40, objectFit: 'cover' }} />
+            <img src={displayPic} alt="Profile" style={{ width: 40, height: 40, objectFit: "cover" }} />
           ) : (
             <span role="img" aria-label="profile" style={{ fontSize: 24 }}>👤</span>
           )}
         </div>
-        <button className="profile-btn" onClick={onProfileClick} style={{marginRight: 8, display: 'flex', alignItems: 'center', gap: 6}}>
-          Profile
-        </button>
-        <Link to={"/"}>
-          <button className="logout-btn">
-            <span className="logout-icon">🚪</span>
-            Log out
-          </button>
-        </Link>
+        <button className="profile-btn" onClick={onProfileClick} style={{ marginRight: 8, display: "flex", alignItems: "center", gap: 6 }}>Profile</button>
+        <Link to="/"><button className="logout-btn"><span className="logout-icon">🚪</span>Log out</button></Link>
       </div>
     </nav>
   );
 }
-// Customer Profile Modal
 
+/* --------------- Profile Modal (password + pic) --------------- */
 function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfilePicUrl }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -72,14 +203,11 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
   const [uploadMsg, setUploadMsg] = useState("");
   const [removingPic, setRemovingPic] = useState(false);
 
-  useEffect(() => {
-    setPicPreview(profilePicUrl || "");
-  }, [profilePicUrl]);
-
+  useEffect(() => { setPicPreview(profilePicUrl || ""); }, [profilePicUrl]);
   if (!isOpen) return null;
 
   const handlePicChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
       setPicFile(file);
       setPicPreview(URL.createObjectURL(file));
@@ -88,7 +216,6 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     }
   };
 
-  // Save/upload new profile pic
   const handlePicSave = async () => {
     if (!picFile) return;
     setSavingPic(true);
@@ -96,24 +223,20 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     const formData = new FormData();
     formData.append("profilePic", picFile);
     try {
-      const res = await axios.post(`http://localhost:5000/api/sellers/${tankDetails.tankId}/profile-pic`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      // Always fetch the latest seller info after upload to get the new profilePicUrl
+      await axios.post(`http://localhost:5000/api/sellers/${tankDetails.tankId}/profile-pic`, formData, { headers: { "Content-Type": "multipart/form-data" } });
       const sellerRes = await axios.get(`http://localhost:5000/api/sellers/${tankDetails.tankId}`);
       let url = sellerRes.data.profilePicUrl;
-      if (url && !url.startsWith('http')) {
-        url = `http://localhost:5000${url}`;
-      }
+      if (url && !url.startsWith("http")) url = `http://localhost:5000${url}`;
       setProfilePicUrl(url);
       setUploadMsg("Profile picture updated!");
       setPicChanged(false);
-    } catch (err) {
+    } catch {
       setUploadMsg("Failed to upload profile picture.");
     } finally {
       setSavingPic(false);
     }
   };
 
-  // Remove profile pic
   const handlePicRemove = async () => {
     setRemovingPic(true);
     setUploadMsg("");
@@ -122,7 +245,7 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
       setProfilePicUrl("");
       setPicPreview("");
       setUploadMsg("Profile picture removed.");
-    } catch (err) {
+    } catch {
       setUploadMsg("Failed to remove profile picture.");
     } finally {
       setRemovingPic(false);
@@ -137,63 +260,58 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
       return;
     }
     try {
-      await axios.put(`http://localhost:5000/api/sellers/${tankDetails.tankId}/password`, {
-        currentPassword,
-        newPassword
-      });
+      await axios.put(`http://localhost:5000/api/sellers/${tankDetails.tankId}/password`, { currentPassword, newPassword });
       setMessage("Password updated successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err) {
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    } catch {
       setMessage("Failed to update password. Please check your current password.");
     }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>👤 Customer Profile</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          {/* Upload/Success/Fail message at top */}
-          {uploadMsg && (
-            <div style={{marginBottom: 12, color: uploadMsg.includes('success') || uploadMsg.includes('updated') ? 'green' : 'red', fontWeight: 500, textAlign: 'center'}}>{uploadMsg}</div>
-          )}
-          {message && (
-            <div style={{marginBottom: 12, color: message.includes('success') ? 'green' : 'red', fontWeight: 500, textAlign: 'center'}}>{message}</div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
-            <img src={picPreview || '/default-profile.png'} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid #06b6d4', marginBottom: 8 }} />
+          {uploadMsg && <div style={{marginBottom:12,color:uploadMsg.includes("updated")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{uploadMsg}</div>}
+          {message && <div style={{marginBottom:12,color:message.includes("success")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{message}</div>}
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
+            <img src={picPreview || "/default-profile.png"} alt="Profile" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "2px solid #06b6d4", marginBottom: 8 }} />
             <input type="file" accept="image/*" onChange={handlePicChange} />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button type="button" className="btn-primary" onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? 'Saving...' : 'Save'}</button>
-              <button type="button" className="btn-secondary" onClick={handlePicRemove} disabled={removingPic || (!profilePicUrl && !picPreview)} style={{ background: '#eee', color: '#333', border: '1px solid #ccc' }}>{removingPic ? 'Removing...' : 'Remove'}</button>
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <button type="button" className="btn-primary" onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? "Saving..." : "Save"}</button>
+              <button type="button" className="btn-secondary" onClick={handlePicRemove} disabled={removingPic || (!profilePicUrl && !picPreview)} style={{ background: "#eee", color: "#333", border: "1px solid #ccc" }}>
+                {removingPic ? "Removing..." : "Remove"}
+              </button>
             </div>
           </div>
+
           <div style={{ marginBottom: 16 }}>
-            <div><b>Name:</b> {tankDetails?.customerName || '--'}</div>
-            <div><b>Phone:</b> {tankDetails?.contactNumber || '--'}</div>
-            <div><b>Email:</b> {tankDetails?.customerEmail || '--'}</div>
-            <div><b>Tank Capacity:</b> {tankDetails?.capacity || '--'}L {(() => {
+            <div><b>Name:</b> {tankDetails?.customerName || "--"}</div>
+            <div><b>Phone:</b> {tankDetails?.contactNumber || "--"}</div>
+            <div><b>Email:</b> {tankDetails?.customerEmail || "--"}</div>
+            <div><b>Tank Capacity:</b> {tankDetails?.capacity || "--"}L {(() => {
               const cap = Number(tankDetails?.capacity);
-              if (cap <= 500) return '(Small)';
-              if (cap <= 1000) return '(Medium)';
-              if (cap <= 2000) return '(Large)';
-              if (cap > 2000) return '(Extra Large)';
-              return '';
+              if (cap <= 500) return "(Small)";
+              if (cap <= 1000) return "(Medium)";
+              if (cap <= 2000) return "(Large)";
+              if (cap > 2000) return "(Extra Large)";
+              return "";
             })()}</div>
           </div>
+
           <form onSubmit={handleSubmit} className="profile-form">
             <label>Current Password</label>
-            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
+            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
             <label>New Password</label>
-            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
             <label>Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-            <button type="submit" className="btn-primary" style={{marginTop: 12}}>Update Password</button>
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <button type="submit" className="btn-primary" style={{ marginTop: 12 }}>Update Password</button>
           </form>
         </div>
       </div>
@@ -201,19 +319,16 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
   );
 }
 
-// 🔹 Enhanced Footer Component
+/* --------------- Footer --------------- */
 function Footer() {
   return (
     <footer className="footer">
       <div className="footer-content">
-        <div className="footer-brand">
-          <div className="footer-logo">
-            <span className="footer-icon">🌊</span>
-            <span className="footer-name">Neptune</span>
-          </div>
+        <div>
+          <div className="footer-logo"><span className="footer-icon">🌊</span><span className="footer-name">Neptune</span></div>
           <p className="footer-tagline">Revolutionizing Water Management</p>
         </div>
-        <div className="footer-links">
+        <div className="footer-links" style={{display:"flex", gap:24}}>
           <div className="footer-section">
             <h4>Support</h4>
             <a href="tel:+1-800-NEPTUNE">24/7 Hotline</a>
@@ -226,44 +341,29 @@ function Footer() {
           </div>
         </div>
       </div>
-      <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Neptune Smart Water System. All rights reserved.</p>
-      </div>
+      <div className="footer-bottom"><p>© {new Date().getFullYear()} Neptune Smart Water System. All rights reserved.</p></div>
     </footer>
   );
 }
 
-// 🔹 Tank Image Component based on capacity
-function TankImage({ capacity }) {
-  const getTankImage = (cap) => {
-    if (cap <= 500) return "🪣"; // Small tank
-    if (cap <= 1000) return "🛢️"; // Medium tank
-    if (cap <= 2000) return "🏺"; // Large tank
-    return "🏗️"; // Extra large tank
-  };
-
-  const getTankSize = (cap) => {
-    if (cap <= 500) return "Small";
-    if (cap <= 1000) return "Medium";
-    if (cap <= 2000) return "Large";
-    return "Extra Large";
-  };
-
+/* --------------- Tank Image --------------- */
+function TankImage({ capacity = 1000 }) {
+  const icon = capacity <= 500 ? "🪣" : capacity <= 1000 ? "🛢️" : capacity <= 2000 ? "🏺" : "🏗️";
+  const size = capacity <= 500 ? "Small" : capacity <= 1000 ? "Medium" : capacity <= 2000 ? "Large" : "Extra Large";
   return (
     <div className="tank-visual">
-      <div className="tank-icon">{getTankImage(capacity)}</div>
+      <div className="tank-icon">{icon}</div>
       <div className="tank-info">
         <span className="tank-capacity">{capacity}L</span>
-        <span className="tank-size">{getTankSize(capacity)}</span>
+        <span className="tank-size">{size}</span>
       </div>
     </div>
   );
 }
 
-// 🔹 Upgrade Tank Modal Component
+/* --------------- Upgrade Modal --------------- */
 function UpgradeModal({ isOpen, onClose }) {
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -272,8 +372,8 @@ function UpgradeModal({ isOpen, onClose }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <div className="upgrade-options">
-            <div className="upgrade-card">
+          <div className="upgrade-options" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div className="upgrade-card" style={{border:"1px solid rgba(145,177,208,.2)",borderRadius:12,padding:12,background:"rgba(255,255,255,.04)"}}>
               <div className="upgrade-icon">⭐</div>
               <h3>Premium Features</h3>
               <ul>
@@ -284,7 +384,7 @@ function UpgradeModal({ isOpen, onClose }) {
               </ul>
               <div className="upgrade-price">$99/month</div>
             </div>
-            <div className="upgrade-card featured">
+            <div className="upgrade-card featured" style={{border:"1px solid rgba(34,211,238,.35)",borderRadius:12,padding:12,background:"linear-gradient(180deg, rgba(34,211,238,.12), rgba(255,255,255,.03))",boxShadow:"0 10px 30px rgba(34,211,238,.12)"}}>
               <div className="upgrade-icon">💎</div>
               <h3>Enterprise</h3>
               <ul>
@@ -296,7 +396,7 @@ function UpgradeModal({ isOpen, onClose }) {
               <div className="upgrade-price">$199/month</div>
             </div>
           </div>
-          <div className="modal-actions">
+          <div className="modal-actions" style={{display:"flex",gap:10,marginTop:12}}>
             <button className="btn-secondary" onClick={onClose}>Maybe Later</button>
             <button className="btn-primary">Upgrade Now</button>
           </div>
@@ -306,53 +406,37 @@ function UpgradeModal({ isOpen, onClose }) {
   );
 }
 
-// 🔹 Weekly Summary Logic
+/* --------------- Helpers for billing --------------- */
 const getWeeklyWaterLevelSummary = (records, capacity) => {
   if (!Array.isArray(records)) return [];
   const grouped = {};
-
   records.forEach((rec) => {
     const date = new Date(rec.recordedAt || rec.timestamp).toLocaleDateString();
     const level = parseFloat(rec.waterLevel ?? rec.level ?? rec.currentLevel ?? 0);
-
     if (!grouped[date]) grouped[date] = { totalLevel: 0, count: 0, refillCycles: 0 };
     grouped[date].totalLevel += level;
     grouped[date].count += 1;
-
-    if (level >= 98) grouped[date].refillCycles += 1; // refill cycle counted
+    if (level >= 98) grouped[date].refillCycles += 1;
   });
-
   return Object.entries(grouped).map(([date, { totalLevel, count, refillCycles }]) => {
-    const units = (refillCycles * capacity) / 1000;
-    const price = units * 20; // Rs 20 per unit
-    return {
-      date,
-      totalLevel,
-      averageLevel: totalLevel / count,
-      refillCycles,
-      price,
-    };
+    const units = (refillCycles * (capacity || 0)) / 1000;
+    const price = units * 20;
+    return { date, totalLevel, averageLevel: totalLevel / count, refillCycles, price };
   });
 };
-
 const calculateMonthlyBill = (weeklySummary) => {
   if (!Array.isArray(weeklySummary)) return { total: 0, rows: [] };
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const thisMonthRows = weeklySummary.filter(row => {
-    const rowDate = new Date(row.date);
-    return rowDate.getMonth() === currentMonth && rowDate.getFullYear() === currentYear;
+  const m = now.getMonth(), y = now.getFullYear();
+  const rows = weeklySummary.filter(r => {
+    const d = new Date(r.date);
+    return d.getMonth() === m && d.getFullYear() === y;
   });
-
-  const total = thisMonthRows.reduce((sum, row) => sum + row.price, 0);
-  return { total, rows: thisMonthRows };
+  return { total: rows.reduce((s, r) => s + r.price, 0), rows };
 };
 
-// 🔹 Enhanced HomePage with Modern Design
-
-function HomePage() {
+/* --------------- Main HomePage --------------- */
+export default function HomePage() {
   const tankId = localStorage.getItem("tankId");
   const [tankDetails, setTankDetails] = useState(null);
   const [currentLevel, setCurrentLevel] = useState(0);
@@ -367,15 +451,12 @@ function HomePage() {
 
   useEffect(() => {
     if (!tankId) return;
-
     const fetchData = async () => {
       try {
-        // Tank Details
         const tankRes = await axios.get(`http://localhost:5000/api/sellers/${tankId}`);
         setTankDetails(tankRes.data);
         if (tankRes.data.profilePicUrl) setProfilePicUrl(tankRes.data.profilePicUrl);
 
-        // Water Level
         const levelRes = await axios.get(`http://localhost:5000/api/waterlevel?tankId=${tankId}`);
         const levelData = levelRes.data.data || [];
         if (levelData.length > 0) {
@@ -383,60 +464,51 @@ function HomePage() {
           setCurrentLevel(latest.currentLevel ?? latest.waterLevel ?? latest.level ?? 0);
         }
 
-        // Water Quality
         const qualityRes = await axios.get(`http://localhost:5000/api/waterquality?tankId=${tankId}`);
         const qualityData = qualityRes.data.data || [];
-        setCurrentStatus(
-          qualityData.length > 0 ? qualityData[qualityData.length - 1].status : "No data"
-        );
+        setCurrentStatus(qualityData.length > 0 ? (qualityData[qualityData.length - 1].status || "No data") : "No data");
 
-        // Calculate Billing
         const summary = getWeeklyWaterLevelSummary(levelData, tankRes.data?.capacity ?? 0);
         const monthly = calculateMonthlyBill(summary);
         setCurrentBill(monthly.total);
 
-        // Issues
         const issuesRes = await axios.get(`http://localhost:5000/api/issues/${tankId}`);
         setIssues(issuesRes.data || []);
 
-        // Registered Tanks (for the new section)
         const tanksRes = await axios.get("http://localhost:5000/api/sellers");
-        setRegisteredTanks(tanksRes.data.data?.slice(0, 6) || []); // Show first 6 tanks
+        setRegisteredTanks(tanksRes.data.data?.slice(0, 6) || []);
       } catch (err) {
-        console.error("❌ Error fetching homepage data:", err);
+        console.error("Error fetching homepage data:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    const intervalId = setInterval(fetchData, 5000);
-    return () => clearInterval(intervalId);
+    const id = setInterval(fetchData, 5000);
+    return () => clearInterval(id);
   }, [tankId]);
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'safe': return '#10b981';
-      case 'unsafe': return '#ef4444';
-      case 'warning': return '#f59e0b';
-      default: return '#6b7280';
+    switch ((status || "").toLowerCase()) {
+      case "safe": return "#10b981";
+      case "unsafe": return "#ef4444";
+      case "warning": return "#f59e0b";
+      default: return "#6b7280";
     }
   };
-
-  const getLevelColor = (level) => {
-    if (level >= 80) return '#10b981';
-    if (level >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
+  const getLevelColor = (level) => (level >= 80 ? "#10b981" : level >= 40 ? "#f59e0b" : "#ef4444");
 
   return (
     <div className="homepage-container">
-      <Nav tankId={tankId} onProfileClick={() => setShowProfileModal(true)} profilePicUrl={profilePicUrl} />
+      <WaterThemeStyles />
 
-      {/* Hero Section */}
+      <Nav onProfileClick={() => setShowProfileModal(true)} profilePicUrl={profilePicUrl} />
+
+      {/* Hero */}
       <section className="hero-section">
         <div className="hero-content">
-          <div className="hero-text">
+          <div>
             <h1 className="hero-title">Welcome back, <span className="hero-tank-id">{tankId}</span></h1>
             <p className="hero-subtitle">Monitor your Neptune smart water system in real-time</p>
           </div>
@@ -445,77 +517,41 @@ function HomePage() {
           </div>
         </div>
         <div className="hero-actions">
-          <button 
-            className="hero-btn primary"
-            onClick={() => setShowUpgradeModal(true)}
-          >
-            🚀 Upgrade Your Tank
-          </button>
-          <Link to="/issues/new" className="hero-btn secondary">
-            🧹 Request Cleanup
-          </Link>
+          <button className="hero-btn primary" onClick={() => setShowUpgradeModal(true)}>🚀 Upgrade Your Tank</button>
+          <Link to="/issues/new" className="hero-btn secondary">🧹 Request Cleanup</Link>
         </div>
       </section>
 
-      {/* Dashboard Cards */}
+      {/* Dashboard */}
       <main className="dashboard-grid">
         <Link to={`/water-level-chart/${tankId}`} className="dashboard-card water-level">
-          <div className="card-header">
-            <div className="card-icon">💧</div>
-            <h3>Water Level</h3>
-          </div>
+          <div className="card-header"><div className="card-icon">💧</div><h3>Water Level</h3></div>
           <div className="card-content">
-            <div className="metric-value" style={{ color: getLevelColor(currentLevel) }}>
-              {loading ? "..." : `${currentLevel}%`}
-            </div>
-            <div className="level-bar">
-              <div 
-                className="level-fill" 
-                style={{ 
-                  width: `${currentLevel}%`,
-                  backgroundColor: getLevelColor(currentLevel)
-                }}
-              ></div>
-            </div>
+            <div className="metric-value" style={{ color: getLevelColor(currentLevel) }}>{loading ? "..." : `${currentLevel}%`}</div>
+            <div className="level-bar"><div className="level-fill" style={{ width: `${currentLevel}%`, backgroundColor: getLevelColor(currentLevel) }} /></div>
           </div>
         </Link>
 
-        <Link to={`/client/billing`} className="dashboard-card billing">
-          <div className="card-header">
-            <div className="card-icon">💰</div>
-            <h3>Current Bill</h3>
-          </div>
+        <Link to="/client/billing" className="dashboard-card billing">
+          <div className="card-header"><div className="card-icon">💰</div><h3>Current Bill</h3></div>
           <div className="card-content">
-            <div className="metric-value">
-              {loading ? "..." : `Rs ${currentBill.toFixed(2)}`}
-            </div>
+            <div className="metric-value">{loading ? "..." : `Rs ${currentBill.toFixed(2)}`}</div>
             <div className="metric-subtitle">This month</div>
           </div>
         </Link>
 
         <Link to={`/water-quality-chart/${tankId}`} className="dashboard-card water-quality">
-          <div className="card-header">
-            <div className="card-icon">🧪</div>
-            <h3>Water Quality</h3>
-          </div>
+          <div className="card-header"><div className="card-icon">🧪</div><h3>Water Quality</h3></div>
           <div className="card-content">
             <div className="status-indicator">
-              <div 
-                className="status-dot" 
-                style={{ backgroundColor: getStatusColor(currentStatus) }}
-              ></div>
-              <span className="status-text">
-                {loading ? "Loading..." : currentStatus}
-              </span>
+              <div className="status-dot" style={{ backgroundColor: getStatusColor(currentStatus) }} />
+              <span className="status-text">{loading ? "Loading..." : currentStatus}</span>
             </div>
           </div>
         </Link>
 
         <div className="dashboard-card issues">
-          <div className="card-header">
-            <div className="card-icon">⚠️</div>
-            <h3>Recent Issues</h3>
-          </div>
+          <div className="card-header"><div className="card-icon">⚠️</div><h3>Recent Issues</h3></div>
           <div className="card-content">
             {loading ? (
               <div className="loading-state">Loading...</div>
@@ -527,23 +563,16 @@ function HomePage() {
                     <div className="issue-text">{issue.title || issue.description || "Unknown issue"}</div>
                   </div>
                 ))}
-                {issues.length > 3 && (
-                  <Link to="/issues" className="view-all-link">
-                    View all {issues.length} issues →
-                  </Link>
-                )}
+                {issues.length > 3 && <Link to="/issues" className="view-all-link">View all {issues.length} issues →</Link>}
               </div>
             ) : (
-              <div className="empty-state">
-                <div className="empty-icon">✅</div>
-                <p>All systems running smoothly</p>
-              </div>
+              <div className="empty-state"><div className="empty-icon">✅</div><p>All systems running smoothly</p></div>
             )}
           </div>
         </div>
       </main>
 
-      {/* Registered Tanks Section */}
+      {/* Registered Tanks */}
       <section className="registered-tanks-section">
         <div className="section-header">
           <h2 className="section-title">🏢 Registered Tanks Network</h2>
@@ -552,16 +581,14 @@ function HomePage() {
         <div className="tanks-grid">
           {loading ? (
             Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="tank-card loading">
-                <div className="tank-skeleton"></div>
-              </div>
+              <div key={idx} className="tank-card loading"><div className="tank-skeleton" /></div>
             ))
           ) : (
             registeredTanks.map((tank, idx) => (
               <div key={idx} className="tank-card">
                 <div className="tank-header">
                   <TankImage capacity={tank.capacity || 1000} />
-                  <div className="tank-status online"></div>
+                  <div className="tank-status online" />
                 </div>
                 <div className="tank-details">
                   <h4 className="customer-name">{tank.customerName || "Anonymous"}</h4>
@@ -574,16 +601,9 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Upgrade Modal */}
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
-      />
-
-  <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} tankDetails={tankDetails} profilePicUrl={profilePicUrl} setProfilePicUrl={setProfilePicUrl} />
-  <Footer />
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} tankDetails={tankDetails} profilePicUrl={profilePicUrl} setProfilePicUrl={setProfilePicUrl} />
+      <Footer />
     </div>
   );
 }
-
-export default HomePage;
