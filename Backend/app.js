@@ -72,12 +72,11 @@ const fetchTankIds = async () => {
 // Fetch immediately and refresh every 5 minutes
 fetchTankIds();
 setInterval(fetchTankIds, 1 * 60 * 1000);
-
 // ---------------------- Water Quality Generator ----------------------
 setInterval(async () => {
   for (const tankId of tankIds) {
     const randomPH = (Math.random() * (8 - 4) + 4).toFixed(2); // 4-8
-    const randomTDS = Math.floor(Math.random() * (500 - 100 + 1)) + 100; // 100-500
+    const randomTDS = Math.floor(Math.random() * (800 - 100 + 1)) + 100; // 100-800 for more variety
     const status = randomTDS > 500 || randomPH < 5 || randomPH > 8 ? "unsafe" : "safe";
 
     const record = new Water({
@@ -91,11 +90,42 @@ setInterval(async () => {
     try {
       await record.save();
       console.log(`✔️ Water quality inserted for ${tankId} at ${new Date().toLocaleTimeString()}`);
+
+      // 🔥 Add email alert logic here
+      if (status === "unsafe") {
+        try {
+          // Find the customer
+          const customer = await Seller.findOne({ tankId });
+          const measurement = `PH: ${randomPH}, TDS: ${randomTDS}`;
+
+          if (customer?.customerEmail) {
+            await sendEmail(
+              customer.customerEmail,
+              tankId,
+              "Below Safe Level",
+              measurement
+            );
+            console.log(
+              `📩 Water quality alert sent to customer: ${customer.customerName} (${customer.customerEmail})`
+            );
+          } else {
+            console.log(`⚠️ No customer email for tank ${tankId}`);
+          }
+
+          // Always send to admin
+          const adminEmail = "johancosta08@gmail.com";
+          await sendEmail(adminEmail, tankId, "Below Safe Level", measurement);
+          console.log("📩 Water quality alert also sent to admin");
+        } catch (emailErr) {
+          console.error("❌ Error sending alert email:", emailErr);
+        }
+      }
     } catch (err) {
       console.error(`❌ Error inserting water quality for ${tankId}:`, err);
     }
   }
-}, 15 * 60 * 1000); // every 10 minutes
+}, 15 * 60 * 1000); // every 15 minutes
+
 
 // ---------------------- Water Level Generator ----------------------
 async function generateWaterLevels() {
@@ -119,11 +149,28 @@ async function generateWaterLevels() {
       });
       await newRecord.save();
       console.log(`💧 Water level for ${tankId}: ${newLevel}%`);
+
+      // 🔥 Email alert logic here (same as your controller)
+      const maxCapacity = 100; // adjust if you track real capacity
+      const percentage = (newLevel / maxCapacity) * 100;
+      if (percentage < 25) {
+        const customer = await Seller.findOne({ tankId });
+        const measurement = `Current Level: ${newLevel}L (${percentage.toFixed(1)}% of ${maxCapacity}L)`;
+
+        if (customer?.customerEmail) {
+          await sendEmail(customer.customerEmail, tankId, "Low Water Level", measurement);
+          console.log(`📩 Low water level alert sent to ${customer.customerName}`);
+        }
+        await sendEmail("johancosta08@gmail.com", tankId, "Low Water Level", measurement);
+        console.log("📩 Low water level alert sent to admin");
+      }
+
     } catch (err) {
       console.error(`❌ Error saving water level for ${tankId}:`, err);
     }
   }
 }
+
 
 // Run immediately and every 10 minutes
 generateWaterLevels();

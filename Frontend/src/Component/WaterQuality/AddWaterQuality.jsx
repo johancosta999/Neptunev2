@@ -140,8 +140,8 @@ function AddWaterQuality() {
           required
         >
           <option value="">-- Select Status --</option>
-          <option value="Safe">Safe</option>
-          <option value="Unsafe">Unsafe</option>
+          <option value="safe">Safe</option>
+          <option value="unsafe">Unsafe</option>
         </select>
         <br />
 

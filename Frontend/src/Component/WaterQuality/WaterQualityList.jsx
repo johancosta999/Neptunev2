@@ -125,7 +125,8 @@ function WaterQualityList() {
     return startOk && endOk;
   });
 
-  const filteredRecords = records.filter((rec) => isWithinRange(rec.timestamp));
+  // Show latest records first
+  const filteredRecords = records.filter((rec) => isWithinRange(rec.timestamp)).reverse();
 
   // Reset page when filters or data change
   useEffect(() => {
