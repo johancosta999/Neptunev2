@@ -524,7 +524,7 @@ export default function HomePage() {
 
       {/* Dashboard */}
       <main className="dashboard-grid">
-        <Link to={`/water-level-chart/${tankId}`} className="dashboard-card water-level">
+        <Link to={"/client/water-level"} className="dashboard-card water-level">
           <div className="card-header"><div className="card-icon">💧</div><h3>Water Level</h3></div>
           <div className="card-content">
             <div className="metric-value" style={{ color: getLevelColor(currentLevel) }}>{loading ? "..." : `${currentLevel}%`}</div>
@@ -540,7 +540,7 @@ export default function HomePage() {
           </div>
         </Link>
 
-        <Link to={`/water-quality-chart/${tankId}`} className="dashboard-card water-quality">
+        <Link to={"/client/water-quality"} className="dashboard-card water-quality">
           <div className="card-header"><div className="card-icon">🧪</div><h3>Water Quality</h3></div>
           <div className="card-content">
             <div className="status-indicator">
