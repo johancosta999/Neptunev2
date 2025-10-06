@@ -1,4 +1,4 @@
-// src/Component/Seller/tanks.jsx
+// src/Component/Seller/Tanks.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -87,23 +87,21 @@ function Tanks() {
     }
   };
 
-  /* -------------------- Styles (full-width) -------------------- */
+  /* -------------------- Styles (full-bleed) -------------------- */
   const styles = {
     page: {
       minHeight: "100vh",
+      width: "100vw",
       padding: "0 16px 16px",
       backgroundImage: `
         radial-gradient(900px 480px at 15% -10%, ${ACCENT.glow}, transparent 60%),
         radial-gradient(900px 480px at 110% 10%, rgba(234,88,12,.18), transparent 60%),
         linear-gradient(135deg, #0b1020 0%, #0d1519 35%, #101826 100%)
       `,
+      overflowX: "hidden",
     },
 
-    // NOW FULL WIDTH (no maxWidth)
-    container: {
-      width: "100%",
-      margin: "0 auto",
-    },
+    container: { width: "100%", margin: "0 auto" },
 
     headerCard: {
       background: "rgba(17,24,39,0.72)",
@@ -135,8 +133,6 @@ function Tanks() {
       alignItems: "center",
       gap: 8,
     },
-
-    // Toolbar spans full width & wraps nicely on small screens
     toolbar: {
       display: "flex",
       gap: 10,
@@ -167,7 +163,6 @@ function Tanks() {
       outline: "none",
     },
 
-    // Full-width grid; cards will fill across the page
     grid: {
       width: "100%",
       display: "grid",
@@ -247,11 +242,21 @@ function Tanks() {
 
   return (
     <div style={styles.page}>
-      {/* Admin nav keeps your header bar */}
+      {/* Global reset to remove the white border & hide scrollbars */}
+      <style>{`
+        html, body, #root { height: 100%; width: 100%; }
+        body { margin: 0 !important; background: transparent; }
+        * { box-sizing: border-box; }
+        /* hide scrollbar */
+        ::-webkit-scrollbar { width: 0; height: 0 }
+        * { scrollbar-width: none; }
+        tr:hover td { background: rgba(2,6,23,.35); transition: background .2s ease; }
+      `}</style>
+
       <AdminNav />
 
       <div style={styles.container}>
-        {/* Header / Filters (full width) */}
+        {/* Header / Filters */}
         <div style={styles.headerCard}>
           <div style={styles.headerRow}>
             <h1 style={styles.title}>
@@ -295,7 +300,7 @@ function Tanks() {
           </div>
         </div>
 
-        {/* Cards grid — now spans the full page width */}
+        {/* Cards grid */}
         <div style={styles.grid}>
           {loading ? (
             <div style={styles.empty}>Loading tanks…</div>
@@ -305,11 +310,7 @@ function Tanks() {
                 ? new Date(tank.sellDate).toLocaleDateString()
                 : "—";
               return (
-                <Card
-                  key={tank._id || tank.tankId}
-                  styles={styles}
-                  accent={ACCENT}
-                >
+                <Card key={tank._id || tank.tankId} styles={styles}>
                   <div style={styles.cardHeader}>
                     <h2 style={styles.tankId}>{tank.tankId}</h2>
                     <span style={styles.badge}>{tank.city || "—"}</span>
@@ -319,22 +320,14 @@ function Tanks() {
                   <Field label="Address" value={tank.address} styles={styles} />
                   <Field label="Email" value={tank.customerEmail} styles={styles} />
                   <Field label="Contact" value={tank.contactNumber} styles={styles} />
-                  <Field
-                    label="Capacity"
-                    value={`${tank.capacity || "—"} L`}
-                    styles={styles}
-                  />
+                  <Field label="Capacity" value={`${tank.capacity || "—"} L`} styles={styles} />
                   <Field label="Price" value={money(tank.price)} styles={styles} />
                   <Field
                     label="Warranty"
                     value={tank.warranty ? `${tank.warranty} years` : "—"}
                     styles={styles}
                   />
-                  <Field
-                    label="Invoice"
-                    value={tank.invoiceNumber}
-                    styles={styles}
-                  />
+                  <Field label="Invoice" value={tank.invoiceNumber} styles={styles} />
                   <Field label="Sold" value={dateStr} styles={styles} />
 
                   <div style={styles.actions}>

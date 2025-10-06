@@ -5,85 +5,187 @@ import { useParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-// 🔹 Summarize weekly water level with proper refill cycles
+/* =========================
+   Helpers
+==========================*/
+
 const getWeeklyWaterLevelSummary = (records, capacity) => {
   if (!Array.isArray(records)) return [];
   const grouped = {};
-
   records.forEach((rec) => {
-    const date = new Date(rec.recordedAt || rec.timestamp).toLocaleDateString();
+    const ts = rec.recordedAt || rec.timestamp;
+    const date = ts ? new Date(ts).toLocaleDateString() : "--";
     const level = parseFloat(rec.waterLevel ?? rec.level ?? rec.currentLevel ?? 0);
-
     if (!grouped[date]) grouped[date] = { totalLevel: 0, count: 0, refillCycles: 0 };
     grouped[date].totalLevel += level;
     grouped[date].count += 1;
-
     if (level >= 98) grouped[date].refillCycles += 1;
   });
 
   return Object.entries(grouped).map(([date, { totalLevel, count, refillCycles }]) => {
-    const units = (refillCycles * capacity) / 1000;
-    const price = units * 20; // Rs 20 per unit per refill
-    return { date, totalLevel: totalLevel.toFixed(2), averageLevel: (totalLevel / count).toFixed(2), refillCycles, price };
+    const units = (refillCycles * (Number(capacity) || 0)) / 1000; // 1000L = 1 unit
+    const price = units * 20; // Rs 20 per unit
+    return {
+      date,
+      averageLevel: count ? (totalLevel / count).toFixed(2) : "0.00",
+      refillCycles,
+      price,
+    };
   });
 };
 
-// 🔹 Calculate current month's bill
-const calculateMonthlyBill = (weeklySummary) => {
-  if (!Array.isArray(weeklySummary)) return { total: 0, rows: [] };
+const calculateMonthlyBill = (summaryRows) => {
   const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const thisMonthRows = weeklySummary.filter((row) => {
-    const rowDate = new Date(row.date);
-    return rowDate.getMonth() === currentMonth && rowDate.getFullYear() === currentYear;
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  const rows = (summaryRows || []).filter((r) => {
+    const d = new Date(r.date);
+    return d.getMonth() === m && d.getFullYear() === y;
   });
-
-  const total = thisMonthRows.reduce((sum, row) => sum + row.price, 0);
-  return { total, rows: thisMonthRows };
+  const total = rows.reduce((acc, r) => acc + (Number(r.price) || 0), 0);
+  return { total, rows };
 };
 
-function BillingDashboard() {
+const fmtMoney = (n) => `Rs ${Number(n || 0).toFixed(2)}`;
+
+/* =========================
+   Component
+==========================*/
+
+export default function BillingDashboard() {
   const { tankId } = useParams();
   const [tankDetails, setTankDetails] = useState(null);
   const [weeklySummary, setWeeklySummary] = useState([]);
   const [monthlyBill, setMonthlyBill] = useState({ total: 0, rows: [] });
   const [loading, setLoading] = useState(true);
-  const reportRef = useRef(); // ✅ Ref for PDF
+  const reportRef = useRef(null);
 
-  // 🎨 Professional UI styles
+  const ACCENT = {
+    main: "#f97316",
+    pill: "rgba(251,146,60,.12)",
+    glow: "rgba(251,146,60,.25)",
+    textOn: "#0f172a",
+  };
+
   const styles = {
-    page: { padding: "24px", backgroundColor: "#f3f4f6", minHeight: "100vh" },
+    page: {
+      minHeight: "100vh",
+      width: "100vw",
+      padding: "16px 16px 24px",
+      backgroundImage: `
+        radial-gradient(1000px 500px at 15% -10%, ${ACCENT.glow}, transparent 60%),
+        radial-gradient(900px 460px at 115% 10%, rgba(234,88,12,.18), transparent 60%),
+        linear-gradient(135deg, #0b1020 0%, #0d1519 35%, #101826 100%)
+      `,
+      overflowX: "hidden",
+    },
+    animWrap: { position: "relative", isolation: "isolate" },
+    aura: {
+      content: '""',
+      position: "absolute",
+      inset: -200,
+      background:
+        "radial-gradient(600px 300px at 20% -10%, rgba(56,189,248,.08), transparent 60%), radial-gradient(600px 300px at 120% -20%, rgba(99,102,241,.08), transparent 60%)",
+      filter: "blur(10px)",
+      zIndex: 0,
+      animation: "floaty 24s ease-in-out infinite",
+      pointerEvents: "none",
+    },
+    container: { position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto" },
+
     card: {
-      backgroundColor: "#ffffff",
-      border: "1px solid #e5e7eb",
-      borderRadius: "12px",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.1)",
-      marginBottom: "16px",
+      background: "rgba(17,24,39,0.72)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      boxShadow: "0 20px 50px rgba(0,0,0,.35)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      borderRadius: 16,
+      marginBottom: 16,
+      overflow: "hidden",
     },
     header: {
-      padding: "16px 20px",
-      borderBottom: "1px solid #e5e7eb",
+      padding: "14px 16px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      gap: "12px",
+      gap: 12,
       flexWrap: "wrap",
+      color: "#e5e7eb",
     },
-    title: { fontSize: "20px", fontWeight: 700, color: "#111827", margin: 0 },
-    body: { padding: "16px 20px" },
+    title: { margin: 0, fontSize: 20, fontWeight: 900, letterSpacing: ".2px", color: "#f8fafc" },
+    body: { padding: "16px" },
+
+    chips: { display: "flex", gap: 8, flexWrap: "wrap" },
+    chip: {
+      padding: "6px 10px",
+      borderRadius: 999,
+      fontSize: 12,
+      fontWeight: 900,
+      background: ACCENT.pill,
+      color: "#fed7aa",
+      border: `1px solid ${ACCENT.glow}`,
+    },
+
+    btnPrimary: {
+      height: 40,
+      padding: "0 14px",
+      borderRadius: 10,
+      border: "none",
+      fontWeight: 900,
+      color: ACCENT.textOn,
+      background: `linear-gradient(135deg, ${ACCENT.main}, #fb923c)`,
+      boxShadow: "0 12px 24px rgba(249,115,22,.28)",
+      cursor: "pointer",
+    },
+
     tableWrap: { overflowX: "auto" },
-    table: { width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: "14px" },
-    theadTr: { backgroundColor: "#f9fafb" },
-    th: { textAlign: "left", padding: "12px", borderBottom: "1px solid #e5e7eb", color: "#374151" },
-    td: { padding: "12px", borderBottom: "1px solid #e5e7eb", color: "#111827" },
-    logo: { height: 50 },
-    reportHeader: { textAlign: "center", marginBottom: 20 },
-    actionsRow: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" },
-    btnPrimary: { padding: "10px 14px", backgroundColor: "#2563eb", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" },
-    badgeRow: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginTop: "8px" },
-    totalBadge: { padding: "10px 14px", backgroundColor: "#ecfdf5", color: "#065f46", border: "1px solid #a7f3d0", borderRadius: "10px", fontWeight: 700 },
+    table: {
+      width: "100%",
+      borderCollapse: "separate",
+      borderSpacing: 0,
+      fontSize: 14,
+      color: "#e5e7eb",
+    },
+    theadTr: { background: "rgba(2,6,23,.6)" },
+    th: {
+      textAlign: "left",
+      padding: "12px",
+      borderBottom: "1px solid rgba(148,163,184,.25)",
+      color: "#9aa3b2",
+      fontWeight: 700,
+      whiteSpace: "nowrap",
+    },
+    td: {
+      padding: "12px",
+      borderBottom: "1px solid rgba(148,163,184,.18)",
+      color: "#f1f5f9",
+    },
+    tdRight: { textAlign: "right", padding: "12px", borderBottom: "1px solid rgba(148,163,184,.18)", color: "#f1f5f9" },
+
+    footerNote: { marginTop: 18, textAlign: "center", fontSize: 12, color: "#9aa3b2" },
+
+    totalRow: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexWrap: "wrap",
+      gap: 12,
+      color: "#e5e7eb",
+    },
+    totalBadge: {
+      padding: "12px 14px",
+      borderRadius: 12,
+      border: "1px solid rgba(34,197,94,.25)",
+      background: "rgba(34,197,94,.12)",
+      color: "#bbf7d0",
+      fontWeight: 900,
+      minWidth: 140,
+      textAlign: "center",
+    },
+
+    brand: { display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "#cbd5e1" },
+    brandImg: { height: 48, filter: "drop-shadow(0 6px 16px rgba(0,0,0,.35))" },
   };
 
   useEffect(() => {
@@ -104,10 +206,9 @@ function BillingDashboard() {
       try {
         const res = await axios.get(`http://localhost:5000/api/waterlevel?tankId=${tankId}`);
         const capacity = tankDetails?.capacity ?? 0;
-        const summary = getWeeklyWaterLevelSummary(res.data.data || [], capacity);
+        const summary = getWeeklyWaterLevelSummary(res.data?.data || [], capacity);
         setWeeklySummary(summary);
-        const monthly = calculateMonthlyBill(summary);
-        setMonthlyBill(monthly);
+        setMonthlyBill(calculateMonthlyBill(summary));
       } catch (err) {
         console.error("Error fetching water level data:", err);
       } finally {
@@ -117,7 +218,6 @@ function BillingDashboard() {
     fetchAndSummarize();
   }, [tankId, tankDetails]);
 
-  // ✅ Generate PDF
   const handleGeneratePDF = async () => {
     if (!reportRef.current) return;
     const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
@@ -131,77 +231,107 @@ function BillingDashboard() {
 
   return (
     <div style={styles.page}>
+      {/* global reset to kill the white browser margin */}
+      <style>{`
+        /* Remove default white border (8px) and ensure full bleed */
+        html, body, #root { height: 100%; width: 100%; }
+        body { margin: 0 !important; background: transparent; }
+        * { box-sizing: border-box; }
+
+        @keyframes floaty {
+          0% { transform: translateY(0px) }
+          50% { transform: translateY(14px) }
+          100% { transform: translateY(0px) }
+        }
+        @media print {
+          nav, .no-print { display:none !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin:0; }
+        }
+        tr:hover td { background: rgba(2,6,23,.35); transition: background .2s ease; }
+      `}</style>
+
       <Nav />
 
-      {/* Report Card */}
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Billing Dashboard - {tankId}</h1>
-          <div style={styles.actionsRow}>
-            <button style={styles.btnPrimary} onClick={handleGeneratePDF}>Download PDF Bill</button>
-          </div>
-        </div>
-        <div style={styles.body} ref={reportRef}>
-          {/* Header */}
-          <div style={styles.reportHeader}>
-            <img src="/Neptune.png" alt="Brand Logo" style={styles.logo} />
-            <h2>Neptune Water Billing Report</h2>
-            <p>Customer: {tankDetails?.customerName || "-"}</p>
-            <p>Tank ID: {tankId}</p>
-            <p>Generated on: {new Date().toLocaleString()}</p>
-          </div>
+      <div style={styles.animWrap}>
+        <div style={styles.aura} />
+        <div style={styles.container}>
+          {/* Report Card */}
+          <div style={styles.card}>
+            <div style={styles.header}>
+              <h1 style={styles.title}>Billing Dashboard — {tankId}</h1>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div style={styles.chips}>
+                  {tankDetails?.capacity && <span style={styles.chip}>Capacity: {tankDetails.capacity} L</span>}
+                  <span style={styles.chip}>Unit Price: {fmtMoney(20)}</span>
+                  {tankDetails?.customerName && <span style={styles.chip}>Customer: {tankDetails.customerName}</span>}
+                </div>
+                <button className="no-print" aria-label="Download PDF Bill" onClick={handleGeneratePDF} style={styles.btnPrimary}>
+                  Download PDF Bill
+                </button>
+              </div>
+            </div>
 
-          {/* Billing Table */}
-          <div style={styles.tableWrap}>
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.theadTr}>
-                  <th style={styles.th}>Date</th>
-                  <th style={styles.th}>Tank Capacity (L)</th>
-                  <th style={styles.th}>Price per Unit (Rs)</th>
-                  <th style={styles.th}>Refill Cycles</th>
-                  <th style={styles.th}>Price (Rs)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td style={styles.td} colSpan="5">Loading...</td></tr>
-                ) : weeklySummary.length > 0 ? (
-                  weeklySummary.map(({ date, refillCycles, price }, idx) => (
-                    <tr key={idx}>
-                      <td style={styles.td}>{date}</td>
-                      <td style={styles.td}>{tankDetails?.capacity ?? "N/A"}</td>
-                      <td style={styles.td}>20</td>
-                      <td style={styles.td}>{refillCycles}</td>
-                      <td style={styles.td}>{price.toFixed(2)}</td>
+            <div style={styles.body} ref={reportRef}>
+              {/* Branding */}
+              <div style={styles.brand}>
+                <img src="/Neptune.png" alt="Neptune logo" style={styles.brandImg} />
+                <div style={{ fontWeight: 900, fontSize: 18, color: "#e2e8f0" }}>Neptune Water Billing Report</div>
+                <div>Tank ID: <strong>{tankId}</strong></div>
+                <div style={{ opacity: .8 }}>Generated: {new Date().toLocaleString()}</div>
+              </div>
+
+              <div style={{ height: 12 }} />
+
+              {/* Table */}
+              <div style={styles.tableWrap}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr style={styles.theadTr}>
+                      <th style={styles.th}>Date</th>
+                      <th style={styles.th}>Tank Capacity (L)</th>
+                      <th style={{ ...styles.th, textAlign: "right" }}>Price / Unit</th>
+                      <th style={{ ...styles.th, textAlign: "right" }}>Refill Cycles</th>
+                      <th style={{ ...styles.th, textAlign: "right" }}>Price (Rs)</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr><td style={styles.td} colSpan="5">No data available.</td></tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td style={styles.td} colSpan="5">Loading…</td></tr>
+                    ) : (weeklySummary?.length || 0) > 0 ? (
+                      weeklySummary.map(({ date, refillCycles, price }, idx) => (
+                        <tr key={idx}>
+                          <td style={styles.td}>{date}</td>
+                          <td style={styles.td}>{tankDetails?.capacity ?? "—"}</td>
+                          <td style={styles.tdRight}>{fmtMoney(20)}</td>
+                          <td style={styles.tdRight}>{refillCycles}</td>
+                          <td style={styles.tdRight}>{fmtMoney(price)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td style={styles.td} colSpan="5">No data available.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={styles.footerNote}>
+                <p>* 1 unit = 1000 liters. A refill cycle is counted when level ≥ 98%.</p>
+                <p>© {new Date().getFullYear()} Neptune Water Systems • support@neptune.com • +94 123 456 789</p>
+              </div>
+            </div>
           </div>
 
-          {/* Footer */}
-          <div style={{ marginTop: 20, textAlign: "center", fontSize: 12, color: "#6b7280" }}>
-            <p>© 2025 Neptune Water Systems. All rights reserved.</p>
-            <p>Contact: support@neptune.com | +94 123 456 789</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Total Card */}
-      <div style={styles.card}>
-        <div style={styles.body}>
-          <div style={styles.badgeRow}>
-            <h2 style={{ margin: 0, color: "#111827" }}>Monthly Bill Total</h2>
-            <div style={styles.totalBadge}>Rs {monthlyBill.total.toFixed(2)}</div>
+          {/* Monthly Total */}
+          <div style={styles.card}>
+            <div style={{ ...styles.body, paddingTop: 18, paddingBottom: 18 }}>
+              <div style={styles.totalRow}>
+                <h2 style={{ margin: 0, fontWeight: 900, color: "#f8fafc" }}>Monthly Bill Total</h2>
+                <div style={styles.totalBadge}>{fmtMoney(monthlyBill.total)}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default BillingDashboard;
