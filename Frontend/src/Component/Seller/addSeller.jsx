@@ -583,12 +583,19 @@ export default function AddSeller() {
             />
 
             <div style={S.label}>City</div>
-            <input
+            <select
               style={S.input}
               name="city"
               value={inputs.city}
               onChange={handleChange}
-            />
+            >
+              <option value="">Select City</option>
+              <option value="Colombo">Colombo</option>
+              <option value="Negombo">Negombo</option>
+              <option value="Kurunegala">Kurunegala</option>
+              <option value="Ja-Ela">Ja-Ela</option>
+              <option value="Wennappuwa">Wennappuwa</option>
+            </select>
             {errors.city && <div style={S.error}>{errors.city}</div>}
 
             <div style={S.label}>Sell Date (must be today)</div>
