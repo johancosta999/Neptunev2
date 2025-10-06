@@ -216,7 +216,7 @@ function WaterQualityList() {
             <button style={styles.btnPrimary} onClick={() => setShowTable((prev) => !prev)}>
               {showTable ? "Hide Water Quality Report" : "View Water Quality Report"}
             </button>
-            <Link to="/water-quality/add">
+            <Link to={`/water-quality/add/${tankId}`}>
               <button style={styles.btnSecondary}>Add New Record</button>
             </Link>
             <button onClick={handleGeneratePDF} style={styles.btnSecondary}>

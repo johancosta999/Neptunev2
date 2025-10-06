@@ -1,4 +1,5 @@
 const WaterQuality = require("../Model/WaterQuality");
+const Seller = require("../Model/sellerModel");
 const axios = require('axios');
 const sendEmail = require("../Utils/sendEmail");
 
@@ -35,28 +36,57 @@ const getById = async (req, res, next) => {
   return res.status(200).json({ record });
 };
 
-const sendWhatsAppMessage = async (phoneNumber, message) => {
-  const url = 'https://graph.facebook.com/v13.0/YOUR_PHONE_NUMBER_ID/messages';
-  const data = {
-    messaging_product: 'whatsapp',
-    to: phoneNumber,
-    text: { body: message },
-  };
-  const headers = {
-    Authorization: `Bearer YOUR_ACCESS_TOKEN`,
-    'Content-Type': 'application/json',
-  };
+// const sendWhatsAppMessage = async (phoneNumber, message) => {
+//   const url = 'https://graph.facebook.com/v13.0/YOUR_PHONE_NUMBER_ID/messages';
+//   const data = {
+//     messaging_product: 'whatsapp',
+//     to: phoneNumber,
+//     text: { body: message },
+//   };
+//   const headers = {
+//     Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+//     'Content-Type': 'application/json',
+//   };
 
-  try {
-    const response = await axios.post(url, data, { headers });
-    console.log('Message sent:', response.data);
-  } catch (error) {
-    console.error('Error sending message:', error);
-  }
-};
+//   try {
+//     const response = await axios.post(url, data, { headers });
+//     console.log('Message sent:', response.data);
+//   } catch (error) {
+//     console.error('Error sending message:', error);
+//   }
+// };
 
 const addWaterQuality = async (req, res, next) => {
-  const { tankId, phLevel, tds, status, timestamp, userEmail } = req.body;
+  // get tankId either from body OR params
+  const tankId = req.body.tankId || req.params.tankId;
+
+  const { phLevel, tds, status, timestamp, userEmail } = req.body;
+
+  // Validate required fields
+  if (!tankId || phLevel === undefined || tds === undefined || !status) {
+    return res.status(400).json({ 
+      message: "Missing required fields. Please provide tankId, phLevel, tds, and status." 
+    });
+  }
+
+  // Validate data types and ranges
+  if (typeof phLevel !== 'number' || phLevel < 0 || phLevel > 14) {
+    return res.status(400).json({ 
+      message: "PH Level must be a number between 0 and 14." 
+    });
+  }
+
+  if (typeof tds !== 'number' || tds < 0 || tds > 1000) {
+    return res.status(400).json({ 
+      message: "TDS must be a number between 0 and 1000." 
+    });
+  }
+
+  if (!['Safe', 'Unsafe', 'safe', 'unsafe'].includes(status)) {
+    return res.status(400).json({ 
+      message: "Status must be either 'Safe' or 'Unsafe'." 
+    });
+  }
 
   try {
     const newRecord = new WaterQuality({
@@ -64,21 +94,40 @@ const addWaterQuality = async (req, res, next) => {
       phLevel,
       tds,
       status,
-      timestamp,
+      timestamp: timestamp || new Date(),
     });
     await newRecord.save();
 
     // 🔹 Send alert if status is unsafe
     if (status.toLowerCase() === "unsafe") {
-      const subject = `⚠️ Water Quality Alert for Tank ${tankId}`;
-      const message = `The water quality status for tank ${tankId} is unsafe.\nPH: ${phLevel}, TDS: ${tds}`;
-      if (userEmail) {
-        await sendEmail(userEmail, subject, message);
+      try {
+        // Find the customer associated with this tank
+        const customer = await Seller.findOne({ tankId: tankId });
+        
+        if (customer && customer.customerEmail) {
+          // Send email to the specific customer
+          const measurement = `PH: ${phLevel}, TDS: ${tds}`;
+          await sendEmail(customer.customerEmail, tankId, "Below Safe Level", measurement);
+          console.log(`✅ Water quality alert email sent to customer: ${customer.customerName} (${customer.customerEmail})`);
+        } else {
+          console.log(`⚠️ No customer found for tank ${tankId} or no email address`);
+        }
+        
+        // Also send to admin for monitoring
+        const adminEmail = "johancosta08@gmail.com";
+        const adminMeasurement = `PH: ${phLevel}, TDS: ${tds}`;
+        await sendEmail(adminEmail, tankId, "Below Safe Level", adminMeasurement);
+        console.log("✅ Water quality alert email sent to admin");
+        
+      } catch (emailError) {
+        console.error("❌ Error sending water quality alert email:", emailError);
+        // Don't fail the request if email fails
       }
     }
 
     res.status(201).json(newRecord);
   } catch (err) {
+    console.error("Error adding water quality record:", err);
     res.status(500).json({ message: err.message });
   }
 };

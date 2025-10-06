@@ -83,7 +83,7 @@ function App() {
         <Route path="/tank/:tankId/dashboard" element={<TankDashboard />} />
 
         <Route path="/water-quality" element={<WaterQualityList />} />
-        <Route path="/water-quality/add" element={<AddWaterQuality />} />
+        <Route path="/water-quality/add/:tankId" element={<AddWaterQuality />} />
         <Route path="/water-quality/edit/:id" element={<EditWaterQuality />} />
         <Route path="/tank/:tankId/water-quality" element={<WaterQualityList />} />
 
