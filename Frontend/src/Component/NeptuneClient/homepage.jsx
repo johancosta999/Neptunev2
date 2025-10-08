@@ -13,6 +13,8 @@ const WaterThemeStyles = () => (
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+a{text-decoration:none}
+a:hover{text-decoration:none}
 
 :root{
   --ink-900:#0a0f1e; --glass-strong:#0b1224f0; --card:#0e162d; --line:#1d2d4a;
@@ -61,7 +63,7 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .hero-subtitle{margin:0;color:#a9c4e0;font-weight:600}
 .tank-visual{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid rgba(145,177,208,.14);background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(145,177,208,.05),0 18px 50px rgba(0,0,0,.35);animation:float 6s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.tank-icon{font-size:64px;filter:drop-shadow(0 12px 30px rgba(96,165,250,.3))}
+.tank-icon{width:64px;height:64px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 30px rgba(96,165,250,.3))}
 .tank-info{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;color:#dff7ff}
 .hero-actions{display:flex;gap:12px;padding:0 18px 12px;flex-wrap:wrap}
 .hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:900;text-decoration:none;border:1px solid transparent;transition:.25s}
@@ -71,10 +73,10 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 
 /* Dashboard */
 .dashboard-grid{max-width:1200px;margin:12px auto 24px;padding:0 6px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.dashboard-card{position:relative;overflow:hidden;padding:14px;border-radius:16px;background:linear-gradient(180deg, var(--card), #0b1428);border:1px solid var(--line);color:var(--text);transition:transform .25s, box-shadow .25s, border-color .25s}
+.dashboard-card{position:relative;overflow:hidden;padding:14px;border-radius:16px;background:linear-gradient(180deg, var(--card), #0b1428);border:1px solid var(--line);color:var(--text);transition:transform .25s, box-shadow .25s, border-color .25s;text-decoration:none}
 .dashboard-card::after{content:"";position:absolute;inset:-60% -30%;background:conic-gradient(from 180deg at 50% 50%, transparent 0 40%, rgba(34,211,238,.08), rgba(96,165,250,.05), transparent 85% 100%);animation:spin 9s linear infinite;pointer-events:none;z-index:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.dashboard-card:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(34,211,238,.14);border-color:rgba(145,177,208,.35)}
+.dashboard-card:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(34,211,238,.14);border-color:rgba(145,177,208,.35);text-decoration:none}
 .card-header{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
 .card-icon{font-size:22px;filter:drop-shadow(0 0 14px rgba(34,211,238,.35))}
 .card-content{margin-top:10px;position:relative;z-index:1}
@@ -90,7 +92,7 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .issue-priority{font-weight:900;font-size:12px;color:#ffe8a3}
 .issue-text{color:#dfefff}
 .view-all-link{margin-top:6px;display:inline-block;color:#9ddcff;text-decoration:none;font-weight:800}
-.view-all-link:hover{text-decoration:underline}
+.view-all-link:hover{color:#22d3ee;transform:translateX(4px)}
 .loading-state{color:#9fb8d3}
 .empty-state{display:flex;flex-direction:column;align-items:center;gap:8px;color:#9fb8d3}
 .empty-icon{font-size:26px}
@@ -133,8 +135,8 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .footer-logo{display:flex;align-items:center;gap:8px}
 .footer-tagline{color:#9fb8d3;margin:6px 0 0}
 .footer-section h4{margin:0 0 6px}
-.footer-section a{display:block;text-decoration:none;color:#cdeaff;margin:3px 0;opacity:.9}
-.footer-section a:hover{opacity:1;text-decoration:underline}
+.footer-section a{display:block;text-decoration:none;color:#cdeaff;margin:3px 0;opacity:.9;transition:all 0.3s ease}
+.footer-section a:hover{opacity:1;color:#22d3ee;transform:translateX(4px)}
 .footer-bottom{text-align:center;color:#9fb8d3;padding:10px;border-top:1px solid rgba(145,177,208,.18)}
 
 /* Responsive */
@@ -348,14 +350,37 @@ function Footer() {
 
 /* --------------- Tank Image --------------- */
 function TankImage({ capacity = 1000 }) {
-  const icon = capacity <= 500 ? "🪣" : capacity <= 1000 ? "🛢️" : capacity <= 2000 ? "🏺" : "🏗️";
+  // 🖼️ Determine brand by capacity (same logic as TankDashboard.jsx)
+  const getBrandByCapacity = (capacityRaw) => {
+    if (!capacityRaw) return { name: "Neptune", image: "/Neptune.png" };
+    const capacityNum = parseInt(String(capacityRaw).replace(/[^0-9]/g, ""), 10);
+    if (Number.isNaN(capacityNum)) return { name: "Neptune", image: "/Neptune.png" };
+    if (capacityNum <= 350) return { name: "Aqualite", image: "/aqualite2.png" };
+    if (capacityNum <= 750) return { name: "BlueWave", image: "/bluewave2.png" };
+    if (capacityNum <= 1000) return { name: "Hydromax", image: "/hydromax.png" };
+    return { name: "Neptune", image: "/Neptune.png" };
+  };
+
+  const brand = getBrandByCapacity(capacity);
   const size = capacity <= 500 ? "Small" : capacity <= 1000 ? "Medium" : capacity <= 2000 ? "Large" : "Extra Large";
+  
   return (
     <div className="tank-visual">
-      <div className="tank-icon">{icon}</div>
+      <div className="tank-icon">
+        <img 
+          src={brand.image} 
+          alt={`${brand.name} tank`}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            filter: "drop-shadow(0 4px 8px rgba(0,0,0,.3))"
+          }}
+        />
+      </div>
       <div className="tank-info">
         <span className="tank-capacity">{capacity}L</span>
-        <span className="tank-size">{size}</span>
+        <span className="tank-size">{brand.name}</span>
       </div>
     </div>
   );
@@ -598,6 +623,177 @@ export default function HomePage() {
               </div>
             ))
           )}
+        </div>
+        
+        {/* Important System Information Section */}
+        <div className="system-info-section" style={{
+          marginTop: "32px",
+          padding: "24px",
+          background: "linear-gradient(180deg, rgba(15,23,42,.8), rgba(15,23,42,.6))",
+          border: "1px solid rgba(145,177,208,.2)",
+          borderRadius: "16px",
+          boxShadow: "0 20px 50px rgba(0,0,0,.35)"
+        }}>
+          <div className="info-header" style={{
+            textAlign: "center",
+            marginBottom: "24px"
+          }}>
+            <h3 style={{
+              margin: "0 0 8px",
+              fontSize: "24px",
+              fontWeight: "900",
+              color: "#e7f7ff",
+              textShadow: "0 4px 12px rgba(0,0,0,.3)"
+            }}>
+              🌊 Neptune Smart Water Management System
+            </h3>
+            <p style={{
+              margin: "0",
+              color: "#a9c4e0",
+              fontSize: "16px",
+              fontWeight: "600"
+            }}>
+              Revolutionizing Water Management with Advanced Technology
+            </p>
+          </div>
+          
+          <div className="info-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "20px",
+            marginBottom: "24px"
+          }}>
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #22d3ee"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#22d3ee",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                🔍 Real-Time Monitoring
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Our advanced sensors continuously monitor water levels, quality parameters (pH, TDS), and system health. 
+                Get instant alerts when your tank needs attention or when water quality issues are detected.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #10b981"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#10b981",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                📊 Smart Analytics
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Advanced analytics help you understand water usage patterns, predict maintenance needs, and optimize 
+                your water consumption. Track trends and make data-driven decisions for better water management.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #f59e0b"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#f59e0b",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                🚨 Proactive Alerts
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Never run out of water again! Our system sends smart notifications via email and SMS when water levels 
+                are low, quality issues are detected, or maintenance is required. Stay informed 24/7.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #8b5cf6"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#8b5cf6",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                💰 Cost Optimization
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Track your water usage and billing in real-time. Our system helps you identify leaks, optimize 
+                consumption, and reduce costs. Get detailed reports and insights to make informed decisions.
+              </p>
+            </div>
+          </div>
+          
+          <div className="info-footer" style={{
+            textAlign: "center",
+            padding: "20px",
+            background: "rgba(34,211,238,.08)",
+            border: "1px solid rgba(34,211,238,.2)",
+            borderRadius: "12px"
+          }}>
+            <h4 style={{
+              margin: "0 0 8px",
+              color: "#22d3ee",
+              fontSize: "18px",
+              fontWeight: "800"
+            }}>
+              🌟 Why Choose Neptune?
+            </h4>
+            <p style={{
+              margin: "0",
+              color: "#dff7ff",
+              fontSize: "14px",
+              lineHeight: "1.6"
+            }}>
+              Neptune combines cutting-edge IoT technology with user-friendly interfaces to provide the most comprehensive 
+              water management solution. Our system is trusted by thousands of customers worldwide and continues to evolve 
+              with the latest innovations in smart water technology.
+            </p>
+          </div>
         </div>
       </section>
 
