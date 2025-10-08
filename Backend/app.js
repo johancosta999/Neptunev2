@@ -77,13 +77,24 @@ setInterval(fetchTankIds, 1 * 60 * 1000);
 // ---------------------- Water Quality Generator ----------------------
 setInterval(async () => {
   for (const tankId of tankIds) {
+    // Skip physical tank - it will have real sensor data
+    if (tankId === 'TNK-20250930-Z592') {
+      console.log(`⏭️ Skipping auto-generation for physical tank: ${tankId}`);
+      continue;
+    }
     const randomPH = (Math.random() * (8 - 4) + 4).toFixed(2); // 4-8
     const randomTDS = Math.floor(Math.random() * (800 - 100 + 1)) + 100; // 100-800 for more variety
+    const randomSalinity = (Math.random() * (35 - 0.1) + 0.1).toFixed(2); // 0.1-35 ppt
+    const randomECValue = Math.floor(Math.random() * (2000 - 100 + 1)) + 100; // 100-2000 μS/cm
+    const randomTurbidity = (Math.random() * (10 - 0.1) + 0.1).toFixed(2); // 0.1-10 NTU
     const status = randomTDS > 500 || randomPH < 5 || randomPH > 8 ? "unsafe" : "safe";
 
     const record = new Water({
       phLevel: randomPH,
       tds: randomTDS,
+      salinity: randomSalinity,
+      ecValue: randomECValue,
+      turbidity: randomTurbidity,
       status,
       timestamp: new Date(),
       tankId,
@@ -98,7 +109,7 @@ setInterval(async () => {
         try {
           // Find the customer
           const customer = await Seller.findOne({ tankId });
-          const measurement = `PH: ${randomPH}, TDS: ${randomTDS}`;
+          const measurement = `PH: ${randomPH}, TDS: ${randomTDS}, Salinity: ${randomSalinity} ppt, EC: ${randomECValue} μS/cm, Turbidity: ${randomTurbidity} NTU`;
 
           if (customer?.customerEmail) {
             await sendEmail(
@@ -132,6 +143,11 @@ setInterval(async () => {
 // ---------------------- Water Level Generator ----------------------
 async function generateWaterLevels() {
   for (const tankId of tankIds) {
+    // Skip physical tank - it will have real sensor data
+    if (tankId === 'TNK-20250930-Z592') {
+      console.log(`⏭️ Skipping auto-generation for physical tank: ${tankId}`);
+      continue;
+    }
     let lastLevel = lastWaterLevels[tankId] || 100;
 
     // Decrease 1-10% each interval

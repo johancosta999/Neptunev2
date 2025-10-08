@@ -209,6 +209,31 @@ function WaterQualityList() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm(`Are you sure you want to delete ALL water quality records for tank ${tankId}? This action cannot be undone!`)) return;
+    
+    try {
+      // Get all records for this tank
+      const tankRecords = records.filter(rec => rec.tankId === tankId);
+      
+      if (tankRecords.length === 0) {
+        alert("No records found to delete.");
+        return;
+      }
+
+      // Delete all records one by one (or you could create a bulk delete endpoint)
+      for (const record of tankRecords) {
+        await axios.delete(`http://localhost:5000/api/waterquality/${record._id}`);
+      }
+      
+      alert(`Successfully deleted ${tankRecords.length} water quality records.`);
+      fetchData();
+    } catch (err) {
+      console.error("Error deleting all records:", err);
+      alert("Error deleting records. Please try again.");
+    }
+  };
+
   const handleGeneratePDF = async () => {
     if (!reportRef.current) return;
     const canvas = await html2canvas(reportRef.current, {
@@ -436,6 +461,18 @@ function WaterQualityList() {
 
               <button onClick={handleGeneratePDF} style={styles.btnSecondary}>
                 Download PDF Report
+              </button>
+
+              <button 
+                onClick={handleDeleteAll} 
+                style={{
+                  ...styles.btnSecondary,
+                  background: "rgba(239,68,68,.1)",
+                  border: "1px solid rgba(239,68,68,.3)",
+                  color: "#ef4444"
+                }}
+              >
+                🗑️ Delete All Records
               </button>
             </div>
           </div>
