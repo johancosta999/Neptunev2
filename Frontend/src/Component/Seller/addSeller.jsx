@@ -47,8 +47,22 @@ export default function AddSeller() {
     return `TNK-${ymd}-${rand}`;
   };
 
+  const generateInvoiceNumber = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const timestamp = now.getTime().toString().slice(-6); // Last 6 digits of timestamp
+    return `INV-${year}${month}${day}-${timestamp}`;
+  };
+
   useEffect(() => {
-    setInputs((s) => ({ ...s, tankId: generateTankId(), sellDate: todayISO() }));
+    setInputs((s) => ({ 
+      ...s, 
+      tankId: generateTankId(), 
+      sellDate: todayISO(),
+      invoiceNumber: generateInvoiceNumber()
+    }));
   }, []);
 
   const setMsg = (m) => {
@@ -79,7 +93,7 @@ export default function AddSeller() {
         if (!/^\d{12}$/.test(value)) return "NIC must be 12 digits";
         return "";
       case "invoiceNumber":
-        if (!/^\d+$/.test(value)) return "Numbers only";
+        // Invoice number is auto-generated, no validation needed
         return "";
       default:
         return "";
@@ -473,7 +487,7 @@ export default function AddSeller() {
                       price: "",
                       warranty: "",
                       description: "",
-                      invoiceNumber: "",
+                      invoiceNumber: generateInvoiceNumber(),
                       password: "",
                     });
                     setSavedRecord(null);
@@ -663,14 +677,15 @@ export default function AddSeller() {
 
             <div style={S.label}>Invoice Number</div>
             <input
-              style={S.input}
+              style={{...S.input, backgroundColor: "#1e3a8a", color: "#93c5fd", cursor: "not-allowed", borderColor: "#3b82f6"}}
               name="invoiceNumber"
               value={inputs.invoiceNumber}
-              onChange={handleChange}
+              readOnly
+              title="Invoice number is auto-generated"
             />
-            {errors.invoiceNumber && (
-              <div style={S.error}>{errors.invoiceNumber}</div>
-            )}
+            <div style={{...S.error, color: "#93c5fd", fontSize: "12px", marginTop: "4px"}}>
+              Auto-generated invoice number
+            </div>
 
             <div style={S.label}>Password</div>
             <div style={{ display: "flex", gap: 8 }}>

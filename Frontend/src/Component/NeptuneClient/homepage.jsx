@@ -121,6 +121,67 @@ a:hover{text-decoration:none}
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid rgba(145,177,208,.18)}
 .modal-close{height:34px;width:34px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:rgba(255,255,255,.06);color:#e6f3ff;font-weight:900;cursor:pointer}
+
+/* Profile Modal Specific Styles */
+.profile-modal{width:min(900px,95vw);max-height:90vh;overflow-y:auto}
+.profile-modal .modal-header{padding:24px 28px 20px;border-bottom:1px solid rgba(145,177,208,.2)}
+.header-content{display:flex;align-items:center;gap:16px}
+.header-icon{font-size:32px;filter:drop-shadow(0 4px 8px rgba(34,211,238,.3))}
+.header-content h2{margin:0 0 4px;font-size:24px;font-weight:900;color:#e7f7ff}
+.header-subtitle{margin:0;color:#a9c4e0;font-size:14px;font-weight:600}
+
+/* Status Messages */
+.status-message{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-weight:600;font-size:14px}
+.status-message.success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10b981}
+.status-message.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
+.status-icon{font-size:16px}
+
+/* Profile Picture Section */
+.profile-picture-section{display:flex;flex-direction:column;align-items:center;margin-bottom:32px;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(145,177,208,.14);border-radius:16px}
+.profile-picture-container{position:relative;margin-bottom:16px}
+.profile-picture{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #22d3ee;box-shadow:0 8px 32px rgba(34,211,238,.3);transition:all 0.3s ease}
+.profile-picture-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s ease}
+.profile-picture-container:hover .profile-picture-overlay{opacity:1}
+.upload-button{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;padding:8px 16px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.3s ease;border:none;font-size:14px}
+.upload-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,211,238,.4)}
+.profile-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.action-btn{padding:10px 20px;border-radius:12px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:6px}
+.action-btn.primary{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;box-shadow:0 4px 16px rgba(34,211,238,.3)}
+.action-btn.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,211,238,.4)}
+.action-btn.secondary{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.action-btn.secondary:hover:not(:disabled){background:rgba(239,68,68,.2);transform:translateY(-2px)}
+.action-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* Info Sections */
+.info-section{margin-bottom:32px}
+.section-title{font-size:18px;font-weight:800;color:#e7f7ff;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px}
+.info-card{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid rgba(145,177,208,.2);border-radius:12px;transition:all 0.3s ease}
+.info-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);border-color:rgba(34,211,238,.3)}
+.info-icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(34,211,238,.3))}
+.info-content{display:flex;flex-direction:column;gap:4px}
+.info-content label{font-size:12px;color:#a9c4e0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.info-value{font-size:14px;color:#e7f7ff;font-weight:700}
+
+/* Tank Info Card */
+.tank-info-card{display:flex;align-items:center;gap:20px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));border:1px solid rgba(145,177,208,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.tank-image-container{width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.1);border-radius:12px;border:1px solid rgba(34,211,238,.3)}
+.tank-image{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+.tank-details{flex:1}
+.tank-brand{font-size:20px;font-weight:900;color:#22d3ee;margin-bottom:4px}
+.tank-capacity{font-size:16px;font-weight:700;color:#e7f7ff;margin-bottom:4px}
+.tank-id{font-size:14px;color:#a9c4e0;margin-bottom:4px}
+.tank-location{font-size:14px;color:#9fb8d3}
+
+/* Password Form */
+.password-form{display:flex;flex-direction:column;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:14px;color:#a9c4e0;font-weight:600}
+.form-input{padding:12px 16px;border:1px solid rgba(145,177,208,.3);border-radius:10px;background:rgba(255,255,255,.05);color:#e7f7ff;font-size:14px;transition:all 0.3s ease}
+.form-input:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.1);background:rgba(255,255,255,.08)}
+.form-input::placeholder{color:#6b7280}
+.submit-btn{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;padding:14px 24px;border-radius:12px;font-weight:800;font-size:16px;border:none;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,211,238,.4)}
 .modal-body{padding-top:12px}
 .profile-form{display:grid;gap:8px}
 .profile-form input{height:40px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:#0b1326;color:#dff7ff;padding:0 10px;outline:none}
@@ -270,51 +331,182 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     }
   };
 
+  // Get tank brand info
+  const getBrandByCapacity = (capacityRaw) => {
+    if (!capacityRaw) return { name: "Neptune", image: "/Neptune.png" };
+    const capacityNum = parseInt(String(capacityRaw).replace(/[^0-9]/g, ""), 10);
+    if (Number.isNaN(capacityNum)) return { name: "Neptune", image: "/Neptune.png" };
+    if (capacityNum <= 350) return { name: "Aqualite", image: "/aqualite2.png" };
+    if (capacityNum <= 750) return { name: "BlueWave", image: "/bluewave2.png" };
+    if (capacityNum <= 1000) return { name: "Hydromax", image: "/hydromax.png" };
+    return { name: "Neptune", image: "/Neptune.png" };
+  };
+
+  const brand = getBrandByCapacity(tankDetails?.capacity);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content profile-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>👤 Customer Profile</h2>
+          <div className="header-content">
+            <div className="header-icon">👤</div>
+            <div>
+              <h2>Customer Profile</h2>
+              <p className="header-subtitle">Manage your account settings</p>
+            </div>
+          </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
+        
         <div className="modal-body">
-          {uploadMsg && <div style={{marginBottom:12,color:uploadMsg.includes("updated")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{uploadMsg}</div>}
-          {message && <div style={{marginBottom:12,color:message.includes("success")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{message}</div>}
+          {/* Status Messages */}
+          {uploadMsg && (
+            <div className={`status-message ${uploadMsg.includes("updated") ? "success" : "error"}`}>
+              <span className="status-icon">{uploadMsg.includes("updated") ? "✅" : "❌"}</span>
+              {uploadMsg}
+            </div>
+          )}
+          {message && (
+            <div className={`status-message ${message.includes("success") ? "success" : "error"}`}>
+              <span className="status-icon">{message.includes("success") ? "✅" : "❌"}</span>
+              {message}
+            </div>
+          )}
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
-            <img src={picPreview || "/default-profile.png"} alt="Profile" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "2px solid #06b6d4", marginBottom: 8 }} />
-            <input type="file" accept="image/*" onChange={handlePicChange} />
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button type="button" className="btn-primary" onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? "Saving..." : "Save"}</button>
-              <button type="button" className="btn-secondary" onClick={handlePicRemove} disabled={removingPic || (!profilePicUrl && !picPreview)} style={{ background: "#eee", color: "#333", border: "1px solid #ccc" }}>
-                {removingPic ? "Removing..." : "Remove"}
+          {/* Profile Picture Section */}
+          <div className="profile-picture-section">
+            <div className="profile-picture-container">
+              <img 
+                src={picPreview || "/default-profile.png"} 
+                alt="Profile" 
+                className="profile-picture"
+              />
+              <div className="profile-picture-overlay">
+                <label className="upload-button">
+                  📷 Upload
+                  <input type="file" accept="image/*" onChange={handlePicChange} style={{ display: "none" }} />
+                </label>
+              </div>
+            </div>
+            <div className="profile-actions">
+              <button 
+                type="button" 
+                className="action-btn primary" 
+                onClick={handlePicSave} 
+                disabled={!picChanged || savingPic}
+              >
+                {savingPic ? "⏳ Saving..." : "💾 Save Picture"}
+              </button>
+              <button 
+                type="button" 
+                className="action-btn secondary" 
+                onClick={handlePicRemove} 
+                disabled={removingPic || (!profilePicUrl && !picPreview)}
+              >
+                {removingPic ? "⏳ Removing..." : "🗑️ Remove"}
               </button>
             </div>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div><b>Name:</b> {tankDetails?.customerName || "--"}</div>
-            <div><b>Phone:</b> {tankDetails?.contactNumber || "--"}</div>
-            <div><b>Email:</b> {tankDetails?.customerEmail || "--"}</div>
-            <div><b>Tank Capacity:</b> {tankDetails?.capacity || "--"}L {(() => {
-              const cap = Number(tankDetails?.capacity);
-              if (cap <= 500) return "(Small)";
-              if (cap <= 1000) return "(Medium)";
-              if (cap <= 2000) return "(Large)";
-              if (cap > 2000) return "(Extra Large)";
-              return "";
-            })()}</div>
+          {/* Customer Information */}
+          <div className="info-section">
+            <h3 className="section-title">📋 Account Information</h3>
+            <div className="info-grid">
+              <div className="info-card">
+                <div className="info-icon">👤</div>
+                <div className="info-content">
+                  <label>Customer Name</label>
+                  <span className="info-value">{tankDetails?.customerName || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">📞</div>
+                <div className="info-content">
+                  <label>Contact Number</label>
+                  <span className="info-value">{tankDetails?.contactNumber || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">📧</div>
+                <div className="info-content">
+                  <label>Email Address</label>
+                  <span className="info-value">{tankDetails?.customerEmail || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">🏠</div>
+                <div className="info-content">
+                  <label>Address</label>
+                  <span className="info-value">{tankDetails?.address || "Not provided"}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="profile-form">
-            <label>Current Password</label>
-            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-            <label>New Password</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-            <label>Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            <button type="submit" className="btn-primary" style={{ marginTop: 12 }}>Update Password</button>
-          </form>
+          {/* Tank Information */}
+          <div className="info-section">
+            <h3 className="section-title">🛢️ Tank Details</h3>
+            <div className="tank-info-card">
+              <div className="tank-image-container">
+                <img src={brand.image} alt={`${brand.name} tank`} className="tank-image" />
+              </div>
+              <div className="tank-details">
+                <div className="tank-brand">{brand.name}</div>
+                <div className="tank-capacity">{tankDetails?.capacity || "Unknown"}L</div>
+                <div className="tank-id">Tank ID: {tankDetails?.tankId || "Unknown"}</div>
+                <div className="tank-location">📍 {tankDetails?.city || "Location not specified"}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Password Change Form */}
+          <div className="info-section">
+            <h3 className="section-title">🔐 Security Settings</h3>
+            <form onSubmit={handleSubmit} className="password-form">
+              <div className="form-group">
+                <label className="form-label">Current Password</label>
+                <input 
+                  type="password" 
+                  value={currentPassword} 
+                  onChange={(e) => setCurrentPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Enter current password"
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">New Password</label>
+                <input 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Enter new password"
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Confirm New Password</label>
+                <input 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Confirm new password"
+                  required 
+                />
+              </div>
+              
+              <button type="submit" className="submit-btn">
+                🔄 Update Password
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
