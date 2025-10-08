@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const path = require("path");
+const sendEmail = require("./Utils/sendEmail");
+
 
 const waterQualityRoutes = require("./Routes/WaterQualityRoutes");
 const Water = require("./Model/WaterQuality");

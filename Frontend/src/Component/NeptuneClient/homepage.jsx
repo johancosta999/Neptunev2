@@ -13,6 +13,8 @@ const WaterThemeStyles = () => (
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+a{text-decoration:none}
+a:hover{text-decoration:none}
 
 :root{
   --ink-900:#0a0f1e; --glass-strong:#0b1224f0; --card:#0e162d; --line:#1d2d4a;
@@ -61,7 +63,7 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .hero-subtitle{margin:0;color:#a9c4e0;font-weight:600}
 .tank-visual{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;border:1px solid rgba(145,177,208,.14);background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(145,177,208,.05),0 18px 50px rgba(0,0,0,.35);animation:float 6s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.tank-icon{font-size:64px;filter:drop-shadow(0 12px 30px rgba(96,165,250,.3))}
+.tank-icon{width:64px;height:64px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 30px rgba(96,165,250,.3))}
 .tank-info{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;color:#dff7ff}
 .hero-actions{display:flex;gap:12px;padding:0 18px 12px;flex-wrap:wrap}
 .hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:900;text-decoration:none;border:1px solid transparent;transition:.25s}
@@ -71,10 +73,10 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 
 /* Dashboard */
 .dashboard-grid{max-width:1200px;margin:12px auto 24px;padding:0 6px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.dashboard-card{position:relative;overflow:hidden;padding:14px;border-radius:16px;background:linear-gradient(180deg, var(--card), #0b1428);border:1px solid var(--line);color:var(--text);transition:transform .25s, box-shadow .25s, border-color .25s}
+.dashboard-card{position:relative;overflow:hidden;padding:14px;border-radius:16px;background:linear-gradient(180deg, var(--card), #0b1428);border:1px solid var(--line);color:var(--text);transition:transform .25s, box-shadow .25s, border-color .25s;text-decoration:none}
 .dashboard-card::after{content:"";position:absolute;inset:-60% -30%;background:conic-gradient(from 180deg at 50% 50%, transparent 0 40%, rgba(34,211,238,.08), rgba(96,165,250,.05), transparent 85% 100%);animation:spin 9s linear infinite;pointer-events:none;z-index:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.dashboard-card:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(34,211,238,.14);border-color:rgba(145,177,208,.35)}
+.dashboard-card:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(34,211,238,.14);border-color:rgba(145,177,208,.35);text-decoration:none}
 .card-header{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
 .card-icon{font-size:22px;filter:drop-shadow(0 0 14px rgba(34,211,238,.35))}
 .card-content{margin-top:10px;position:relative;z-index:1}
@@ -90,7 +92,7 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .issue-priority{font-weight:900;font-size:12px;color:#ffe8a3}
 .issue-text{color:#dfefff}
 .view-all-link{margin-top:6px;display:inline-block;color:#9ddcff;text-decoration:none;font-weight:800}
-.view-all-link:hover{text-decoration:underline}
+.view-all-link:hover{color:#22d3ee;transform:translateX(4px)}
 .loading-state{color:#9fb8d3}
 .empty-state{display:flex;flex-direction:column;align-items:center;gap:8px;color:#9fb8d3}
 .empty-icon{font-size:26px}
@@ -119,6 +121,67 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid rgba(145,177,208,.18)}
 .modal-close{height:34px;width:34px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:rgba(255,255,255,.06);color:#e6f3ff;font-weight:900;cursor:pointer}
+
+/* Profile Modal Specific Styles */
+.profile-modal{width:min(900px,95vw);max-height:90vh;overflow-y:auto}
+.profile-modal .modal-header{padding:24px 28px 20px;border-bottom:1px solid rgba(145,177,208,.2)}
+.header-content{display:flex;align-items:center;gap:16px}
+.header-icon{font-size:32px;filter:drop-shadow(0 4px 8px rgba(34,211,238,.3))}
+.header-content h2{margin:0 0 4px;font-size:24px;font-weight:900;color:#e7f7ff}
+.header-subtitle{margin:0;color:#a9c4e0;font-size:14px;font-weight:600}
+
+/* Status Messages */
+.status-message{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-weight:600;font-size:14px}
+.status-message.success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10b981}
+.status-message.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
+.status-icon{font-size:16px}
+
+/* Profile Picture Section */
+.profile-picture-section{display:flex;flex-direction:column;align-items:center;margin-bottom:32px;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(145,177,208,.14);border-radius:16px}
+.profile-picture-container{position:relative;margin-bottom:16px}
+.profile-picture{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #22d3ee;box-shadow:0 8px 32px rgba(34,211,238,.3);transition:all 0.3s ease}
+.profile-picture-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.3s ease}
+.profile-picture-container:hover .profile-picture-overlay{opacity:1}
+.upload-button{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;padding:8px 16px;border-radius:20px;font-weight:700;cursor:pointer;transition:all 0.3s ease;border:none;font-size:14px}
+.upload-button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,211,238,.4)}
+.profile-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.action-btn{padding:10px 20px;border-radius:12px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:6px}
+.action-btn.primary{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;box-shadow:0 4px 16px rgba(34,211,238,.3)}
+.action-btn.primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,211,238,.4)}
+.action-btn.secondary{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.action-btn.secondary:hover:not(:disabled){background:rgba(239,68,68,.2);transform:translateY(-2px)}
+.action-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* Info Sections */
+.info-section{margin-bottom:32px}
+.section-title{font-size:18px;font-weight:800;color:#e7f7ff;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px}
+.info-card{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid rgba(145,177,208,.2);border-radius:12px;transition:all 0.3s ease}
+.info-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);border-color:rgba(34,211,238,.3)}
+.info-icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(34,211,238,.3))}
+.info-content{display:flex;flex-direction:column;gap:4px}
+.info-content label{font-size:12px;color:#a9c4e0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.info-value{font-size:14px;color:#e7f7ff;font-weight:700}
+
+/* Tank Info Card */
+.tank-info-card{display:flex;align-items:center;gap:20px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));border:1px solid rgba(145,177,208,.2);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.tank-image-container{width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:rgba(34,211,238,.1);border-radius:12px;border:1px solid rgba(34,211,238,.3)}
+.tank-image{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+.tank-details{flex:1}
+.tank-brand{font-size:20px;font-weight:900;color:#22d3ee;margin-bottom:4px}
+.tank-capacity{font-size:16px;font-weight:700;color:#e7f7ff;margin-bottom:4px}
+.tank-id{font-size:14px;color:#a9c4e0;margin-bottom:4px}
+.tank-location{font-size:14px;color:#9fb8d3}
+
+/* Password Form */
+.password-form{display:flex;flex-direction:column;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:14px;color:#a9c4e0;font-weight:600}
+.form-input{padding:12px 16px;border:1px solid rgba(145,177,208,.3);border-radius:10px;background:rgba(255,255,255,.05);color:#e7f7ff;font-size:14px;transition:all 0.3s ease}
+.form-input:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.1);background:rgba(255,255,255,.08)}
+.form-input::placeholder{color:#6b7280}
+.submit-btn{background:linear-gradient(135deg, #22d3ee, #60a5fa);color:#071d21;padding:14px 24px;border-radius:12px;font-weight:800;font-size:16px;border:none;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,211,238,.4)}
 .modal-body{padding-top:12px}
 .profile-form{display:grid;gap:8px}
 .profile-form input{height:40px;border-radius:10px;border:1px solid rgba(145,177,208,.25);background:#0b1326;color:#dff7ff;padding:0 10px;outline:none}
@@ -133,8 +196,8 @@ body{margin:0;background:#0a0f1e;color:#e5f6ff;font-family:Inter,system-ui,-appl
 .footer-logo{display:flex;align-items:center;gap:8px}
 .footer-tagline{color:#9fb8d3;margin:6px 0 0}
 .footer-section h4{margin:0 0 6px}
-.footer-section a{display:block;text-decoration:none;color:#cdeaff;margin:3px 0;opacity:.9}
-.footer-section a:hover{opacity:1;text-decoration:underline}
+.footer-section a{display:block;text-decoration:none;color:#cdeaff;margin:3px 0;opacity:.9;transition:all 0.3s ease}
+.footer-section a:hover{opacity:1;color:#22d3ee;transform:translateX(4px)}
 .footer-bottom{text-align:center;color:#9fb8d3;padding:10px;border-top:1px solid rgba(145,177,208,.18)}
 
 /* Responsive */
@@ -268,51 +331,182 @@ function ProfileModal({ isOpen, onClose, tankDetails, profilePicUrl, setProfileP
     }
   };
 
+  // Get tank brand info
+  const getBrandByCapacity = (capacityRaw) => {
+    if (!capacityRaw) return { name: "Neptune", image: "/Neptune.png" };
+    const capacityNum = parseInt(String(capacityRaw).replace(/[^0-9]/g, ""), 10);
+    if (Number.isNaN(capacityNum)) return { name: "Neptune", image: "/Neptune.png" };
+    if (capacityNum <= 350) return { name: "Aqualite", image: "/aqualite2.png" };
+    if (capacityNum <= 750) return { name: "BlueWave", image: "/bluewave2.png" };
+    if (capacityNum <= 1000) return { name: "Hydromax", image: "/hydromax.png" };
+    return { name: "Neptune", image: "/Neptune.png" };
+  };
+
+  const brand = getBrandByCapacity(tankDetails?.capacity);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content profile-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>👤 Customer Profile</h2>
+          <div className="header-content">
+            <div className="header-icon">👤</div>
+            <div>
+              <h2>Customer Profile</h2>
+              <p className="header-subtitle">Manage your account settings</p>
+            </div>
+          </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
+        
         <div className="modal-body">
-          {uploadMsg && <div style={{marginBottom:12,color:uploadMsg.includes("updated")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{uploadMsg}</div>}
-          {message && <div style={{marginBottom:12,color:message.includes("success")?"#16a34a":"#ef4444",fontWeight:600,textAlign:"center"}}>{message}</div>}
+          {/* Status Messages */}
+          {uploadMsg && (
+            <div className={`status-message ${uploadMsg.includes("updated") ? "success" : "error"}`}>
+              <span className="status-icon">{uploadMsg.includes("updated") ? "✅" : "❌"}</span>
+              {uploadMsg}
+            </div>
+          )}
+          {message && (
+            <div className={`status-message ${message.includes("success") ? "success" : "error"}`}>
+              <span className="status-icon">{message.includes("success") ? "✅" : "❌"}</span>
+              {message}
+            </div>
+          )}
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
-            <img src={picPreview || "/default-profile.png"} alt="Profile" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "2px solid #06b6d4", marginBottom: 8 }} />
-            <input type="file" accept="image/*" onChange={handlePicChange} />
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button type="button" className="btn-primary" onClick={handlePicSave} disabled={!picChanged || savingPic}>{savingPic ? "Saving..." : "Save"}</button>
-              <button type="button" className="btn-secondary" onClick={handlePicRemove} disabled={removingPic || (!profilePicUrl && !picPreview)} style={{ background: "#eee", color: "#333", border: "1px solid #ccc" }}>
-                {removingPic ? "Removing..." : "Remove"}
+          {/* Profile Picture Section */}
+          <div className="profile-picture-section">
+            <div className="profile-picture-container">
+              <img 
+                src={picPreview || "/default-profile.png"} 
+                alt="Profile" 
+                className="profile-picture"
+              />
+              <div className="profile-picture-overlay">
+                <label className="upload-button">
+                  📷 Upload
+                  <input type="file" accept="image/*" onChange={handlePicChange} style={{ display: "none" }} />
+                </label>
+              </div>
+            </div>
+            <div className="profile-actions">
+              <button 
+                type="button" 
+                className="action-btn primary" 
+                onClick={handlePicSave} 
+                disabled={!picChanged || savingPic}
+              >
+                {savingPic ? "⏳ Saving..." : "💾 Save Picture"}
+              </button>
+              <button 
+                type="button" 
+                className="action-btn secondary" 
+                onClick={handlePicRemove} 
+                disabled={removingPic || (!profilePicUrl && !picPreview)}
+              >
+                {removingPic ? "⏳ Removing..." : "🗑️ Remove"}
               </button>
             </div>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div><b>Name:</b> {tankDetails?.customerName || "--"}</div>
-            <div><b>Phone:</b> {tankDetails?.contactNumber || "--"}</div>
-            <div><b>Email:</b> {tankDetails?.customerEmail || "--"}</div>
-            <div><b>Tank Capacity:</b> {tankDetails?.capacity || "--"}L {(() => {
-              const cap = Number(tankDetails?.capacity);
-              if (cap <= 500) return "(Small)";
-              if (cap <= 1000) return "(Medium)";
-              if (cap <= 2000) return "(Large)";
-              if (cap > 2000) return "(Extra Large)";
-              return "";
-            })()}</div>
+          {/* Customer Information */}
+          <div className="info-section">
+            <h3 className="section-title">📋 Account Information</h3>
+            <div className="info-grid">
+              <div className="info-card">
+                <div className="info-icon">👤</div>
+                <div className="info-content">
+                  <label>Customer Name</label>
+                  <span className="info-value">{tankDetails?.customerName || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">📞</div>
+                <div className="info-content">
+                  <label>Contact Number</label>
+                  <span className="info-value">{tankDetails?.contactNumber || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">📧</div>
+                <div className="info-content">
+                  <label>Email Address</label>
+                  <span className="info-value">{tankDetails?.customerEmail || "Not provided"}</span>
+                </div>
+              </div>
+              
+              <div className="info-card">
+                <div className="info-icon">🏠</div>
+                <div className="info-content">
+                  <label>Address</label>
+                  <span className="info-value">{tankDetails?.address || "Not provided"}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="profile-form">
-            <label>Current Password</label>
-            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-            <label>New Password</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-            <label>Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            <button type="submit" className="btn-primary" style={{ marginTop: 12 }}>Update Password</button>
-          </form>
+          {/* Tank Information */}
+          <div className="info-section">
+            <h3 className="section-title">🛢️ Tank Details</h3>
+            <div className="tank-info-card">
+              <div className="tank-image-container">
+                <img src={brand.image} alt={`${brand.name} tank`} className="tank-image" />
+              </div>
+              <div className="tank-details">
+                <div className="tank-brand">{brand.name}</div>
+                <div className="tank-capacity">{tankDetails?.capacity || "Unknown"}L</div>
+                <div className="tank-id">Tank ID: {tankDetails?.tankId || "Unknown"}</div>
+                <div className="tank-location">📍 {tankDetails?.city || "Location not specified"}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Password Change Form */}
+          <div className="info-section">
+            <h3 className="section-title">🔐 Security Settings</h3>
+            <form onSubmit={handleSubmit} className="password-form">
+              <div className="form-group">
+                <label className="form-label">Current Password</label>
+                <input 
+                  type="password" 
+                  value={currentPassword} 
+                  onChange={(e) => setCurrentPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Enter current password"
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">New Password</label>
+                <input 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Enter new password"
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Confirm New Password</label>
+                <input 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                  className="form-input"
+                  placeholder="Confirm new password"
+                  required 
+                />
+              </div>
+              
+              <button type="submit" className="submit-btn">
+                🔄 Update Password
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -348,14 +542,37 @@ function Footer() {
 
 /* --------------- Tank Image --------------- */
 function TankImage({ capacity = 1000 }) {
-  const icon = capacity <= 500 ? "🪣" : capacity <= 1000 ? "🛢️" : capacity <= 2000 ? "🏺" : "🏗️";
+  // 🖼️ Determine brand by capacity (same logic as TankDashboard.jsx)
+  const getBrandByCapacity = (capacityRaw) => {
+    if (!capacityRaw) return { name: "Neptune", image: "/Neptune.png" };
+    const capacityNum = parseInt(String(capacityRaw).replace(/[^0-9]/g, ""), 10);
+    if (Number.isNaN(capacityNum)) return { name: "Neptune", image: "/Neptune.png" };
+    if (capacityNum <= 350) return { name: "Aqualite", image: "/aqualite2.png" };
+    if (capacityNum <= 750) return { name: "BlueWave", image: "/bluewave2.png" };
+    if (capacityNum <= 1000) return { name: "Hydromax", image: "/hydromax.png" };
+    return { name: "Neptune", image: "/Neptune.png" };
+  };
+
+  const brand = getBrandByCapacity(capacity);
   const size = capacity <= 500 ? "Small" : capacity <= 1000 ? "Medium" : capacity <= 2000 ? "Large" : "Extra Large";
+  
   return (
     <div className="tank-visual">
-      <div className="tank-icon">{icon}</div>
+      <div className="tank-icon">
+        <img 
+          src={brand.image} 
+          alt={`${brand.name} tank`}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            filter: "drop-shadow(0 4px 8px rgba(0,0,0,.3))"
+          }}
+        />
+      </div>
       <div className="tank-info">
         <span className="tank-capacity">{capacity}L</span>
-        <span className="tank-size">{size}</span>
+        <span className="tank-size">{brand.name}</span>
       </div>
     </div>
   );
@@ -524,7 +741,7 @@ export default function HomePage() {
 
       {/* Dashboard */}
       <main className="dashboard-grid">
-        <Link to={`/water-level-chart/${tankId}`} className="dashboard-card water-level">
+        <Link to={"/client/water-level"} className="dashboard-card water-level">
           <div className="card-header"><div className="card-icon">💧</div><h3>Water Level</h3></div>
           <div className="card-content">
             <div className="metric-value" style={{ color: getLevelColor(currentLevel) }}>{loading ? "..." : `${currentLevel}%`}</div>
@@ -540,7 +757,7 @@ export default function HomePage() {
           </div>
         </Link>
 
-        <Link to={`/water-quality-chart/${tankId}`} className="dashboard-card water-quality">
+        <Link to={"/client/water-quality"} className="dashboard-card water-quality">
           <div className="card-header"><div className="card-icon">🧪</div><h3>Water Quality</h3></div>
           <div className="card-content">
             <div className="status-indicator">
@@ -550,6 +767,7 @@ export default function HomePage() {
           </div>
         </Link>
 
+        <Link to={`/issues/${tankId}`}>
         <div className="dashboard-card issues">
           <div className="card-header"><div className="card-icon">⚠️</div><h3>Recent Issues</h3></div>
           <div className="card-content">
@@ -570,6 +788,7 @@ export default function HomePage() {
             )}
           </div>
         </div>
+        </Link>
       </main>
 
       {/* Registered Tanks */}
@@ -598,6 +817,177 @@ export default function HomePage() {
               </div>
             ))
           )}
+        </div>
+        
+        {/* Important System Information Section */}
+        <div className="system-info-section" style={{
+          marginTop: "32px",
+          padding: "24px",
+          background: "linear-gradient(180deg, rgba(15,23,42,.8), rgba(15,23,42,.6))",
+          border: "1px solid rgba(145,177,208,.2)",
+          borderRadius: "16px",
+          boxShadow: "0 20px 50px rgba(0,0,0,.35)"
+        }}>
+          <div className="info-header" style={{
+            textAlign: "center",
+            marginBottom: "24px"
+          }}>
+            <h3 style={{
+              margin: "0 0 8px",
+              fontSize: "24px",
+              fontWeight: "900",
+              color: "#e7f7ff",
+              textShadow: "0 4px 12px rgba(0,0,0,.3)"
+            }}>
+              🌊 Neptune Smart Water Management System
+            </h3>
+            <p style={{
+              margin: "0",
+              color: "#a9c4e0",
+              fontSize: "16px",
+              fontWeight: "600"
+            }}>
+              Revolutionizing Water Management with Advanced Technology
+            </p>
+          </div>
+          
+          <div className="info-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "20px",
+            marginBottom: "24px"
+          }}>
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #22d3ee"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#22d3ee",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                🔍 Real-Time Monitoring
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Our advanced sensors continuously monitor water levels, quality parameters (pH, TDS), and system health. 
+                Get instant alerts when your tank needs attention or when water quality issues are detected.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #10b981"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#10b981",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                📊 Smart Analytics
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Advanced analytics help you understand water usage patterns, predict maintenance needs, and optimize 
+                your water consumption. Track trends and make data-driven decisions for better water management.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #f59e0b"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#f59e0b",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                🚨 Proactive Alerts
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Never run out of water again! Our system sends smart notifications via email and SMS when water levels 
+                are low, quality issues are detected, or maintenance is required. Stay informed 24/7.
+              </p>
+            </div>
+            
+            <div className="info-card" style={{
+              padding: "20px",
+              background: "rgba(255,255,255,.04)",
+              border: "1px solid rgba(145,177,208,.15)",
+              borderRadius: "12px",
+              borderLeft: "4px solid #8b5cf6"
+            }}>
+              <h4 style={{
+                margin: "0 0 12px",
+                color: "#8b5cf6",
+                fontSize: "18px",
+                fontWeight: "800"
+              }}>
+                💰 Cost Optimization
+              </h4>
+              <p style={{
+                margin: "0",
+                color: "#dff7ff",
+                fontSize: "14px",
+                lineHeight: "1.6"
+              }}>
+                Track your water usage and billing in real-time. Our system helps you identify leaks, optimize 
+                consumption, and reduce costs. Get detailed reports and insights to make informed decisions.
+              </p>
+            </div>
+          </div>
+          
+          <div className="info-footer" style={{
+            textAlign: "center",
+            padding: "20px",
+            background: "rgba(34,211,238,.08)",
+            border: "1px solid rgba(34,211,238,.2)",
+            borderRadius: "12px"
+          }}>
+            <h4 style={{
+              margin: "0 0 8px",
+              color: "#22d3ee",
+              fontSize: "18px",
+              fontWeight: "800"
+            }}>
+              🌟 Why Choose Neptune?
+            </h4>
+            <p style={{
+              margin: "0",
+              color: "#dff7ff",
+              fontSize: "14px",
+              lineHeight: "1.6"
+            }}>
+              Neptune combines cutting-edge IoT technology with user-friendly interfaces to provide the most comprehensive 
+              water management solution. Our system is trusted by thousands of customers worldwide and continues to evolve 
+              with the latest innovations in smart water technology.
+            </p>
+          </div>
         </div>
       </section>
 
