@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import Nav from "../Nav/nav";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import WaterLevelChart from "../WaterLevel/WaterLevelChart";
+import WaterLevelChart from "./WaterLevelChart";
 import { Button } from "@mui/material";
 
 function WaterLevelList() {
