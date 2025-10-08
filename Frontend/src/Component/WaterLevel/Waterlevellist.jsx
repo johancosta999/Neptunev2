@@ -1,20 +1,20 @@
-// src/pages/WaterQuality/WaterQualityList.jsx
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
 import Nav from "../Nav/nav";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import WaterQualityChart from "../WaterQuality/WaterQualityChart";
+import WaterLevelChart from "./WaterLevelChart";
 import { Button } from "@mui/material";
 
-function WaterQualityList() {
+function WaterLevelList() {
   const [records, setRecords] = useState([]);
   const { tankId } = useParams();
   const reportRef = useRef();
   const [showTable, setShowTable] = useState(false);
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
+  const [deletingAll, setDeletingAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -126,6 +126,15 @@ function WaterQualityList() {
       fontWeight: 800,
       cursor: "pointer",
     },
+    btnDanger: {
+      padding: "10px 14px",
+      borderRadius: 10,
+      border: "1px solid rgba(239,68,68,.35)",
+      background: "rgba(239,68,68,.1)",
+      color: "#fca5a5",
+      fontWeight: 800,
+      cursor: "pointer",
+    },
     tableWrap: { overflowX: "auto" },
     table: {
       width: "100%",
@@ -185,11 +194,11 @@ function WaterQualityList() {
   const fetchData = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/waterquality?tankId=${tankId}`
+        `http://localhost:5000/api/waterlevel?tankId=${tankId}`
       );
       setRecords(res.data.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error fetching water level:", err);
     }
   };
 
@@ -202,10 +211,32 @@ function WaterQualityList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/waterquality/${id}`);
+      await axios.delete(`http://localhost:5000/api/waterlevel/${id}`);
       fetchData();
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error deleting:", err);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!tankId) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ALL water level records for ${tankId}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingAll(true);
+      await axios.delete(
+        `http://localhost:5000/api/waterlevel/by-tank/${tankId}`
+      );
+      await fetchData();
+      alert("All records deleted successfully.");
+    } catch (err) {
+      console.error("❌ Error deleting all:", err);
+      alert("Failed to delete all records.");
+    } finally {
+      setDeletingAll(false);
     }
   };
 
@@ -221,30 +252,31 @@ function WaterQualityList() {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`WaterQuality_Report_Tank_${tankId}.pdf`);
+    pdf.save(`WaterLevel_Report_Tank_${tankId}.pdf`);
   };
 
   // ---------- Summary helpers ----------
   const getWeeklySummary = () => {
     const grouped = {};
     records.forEach((rec) => {
-      const date = new Date(rec.timestamp).toLocaleDateString();
-      if (!grouped[date])
-        grouped[date] = { phTotal: 0, tdsTotal: 0, count: 0, statusCount: {} };
-      grouped[date].phTotal += rec.phLevel;
-      grouped[date].tdsTotal += rec.tds;
+      const date = new Date(rec.recordedAt || rec.timestamp).toLocaleDateString();
+      const level = Number(rec.currentLevel) || 0;
+      if (!grouped[date]) {
+        grouped[date] = { total: 0, count: 0, recycleCount: 0, statusCount: {} };
+      }
+      grouped[date].total += level;
       grouped[date].count += 1;
+      if (level >= 98) grouped[date].recycleCount += 1; // count refills
       grouped[date].statusCount[rec.status] =
         (grouped[date].statusCount[rec.status] || 0) + 1;
     });
 
     return Object.entries(grouped).map(([date, values]) => {
-      const avgPH = (values.phTotal / values.count).toFixed(2);
-      const avgTDS = (values.tdsTotal / values.count).toFixed(2);
+      const avgLevel = (values.total / values.count).toFixed(2);
       const frequentStatus = Object.entries(values.statusCount).reduce((a, b) =>
         a[1] > b[1] ? a : b
       )[0];
-      return { date, avgPH, avgTDS, frequentStatus };
+      return { date, avgLevel, recycleCount: values.recycleCount, frequentStatus };
     });
   };
 
@@ -271,7 +303,7 @@ function WaterQualityList() {
   });
 
   // Latest first
-  const filteredRecords = records.filter((rec) => isWithinRange(rec.timestamp)).reverse();
+  const filteredRecords = records.filter((rec) => isWithinRange(rec.recordedAt || rec.timestamp)).reverse();
 
   // Pagination
   useEffect(() => setCurrentPage(1), [startDateTime, endDateTime, showTable, records.length]);
@@ -317,18 +349,17 @@ function WaterQualityList() {
         {/* Chart Card */}
         <div style={styles.card}>
           <div style={styles.header}>
-            <h2 style={styles.title}>Water Quality Overview — {tankId}</h2>
+            <h2 style={styles.title}>Water Level Overview — {tankId}</h2>
           </div>
           <div style={styles.body}>
-            {/* Your chart component (can ignore the prop if not used) */}
-            <WaterQualityChart records={records} />
+            <WaterLevelChart records={records} />
           </div>
         </div>
 
         {/* Summary Card */}
         <div style={styles.card}>
           <div style={styles.header}>
-            <h2 style={styles.title}>Weekly Water Quality Summary</h2>
+            <h2 style={styles.title}>Weekly Water Level Summary</h2>
           </div>
           <div
             style={{
@@ -372,8 +403,8 @@ function WaterQualityList() {
                 <thead>
                   <tr style={styles.theadTr}>
                     <th style={styles.th}>Date</th>
-                    <th style={styles.th}>Average pH</th>
-                    <th style={styles.th}>Average TDS</th>
+                    <th style={styles.th}>Average Water Level (%)</th>
+                    <th style={styles.th}>Refill Cycles</th>
                     <th style={styles.th}>Most Common Status</th>
                   </tr>
                 </thead>
@@ -381,8 +412,8 @@ function WaterQualityList() {
                   {filteredSummary.map((row, i) => (
                     <tr key={i}>
                       <td style={styles.td}>{row.date}</td>
-                      <td style={styles.td}>{row.avgPH}</td>
-                      <td style={styles.td}>{row.avgTDS}</td>
+                      <td style={styles.td}>{row.avgLevel}%</td>
+                      <td style={styles.td}>{row.recycleCount}</td>
                       <td style={styles.td}>{row.frequentStatus}</td>
                     </tr>
                   ))}
@@ -407,10 +438,18 @@ function WaterQualityList() {
                 style={styles.btnPrimary}
                 onClick={() => setShowTable((prev) => !prev)}
               >
-                {showTable ? "Hide Water Quality Report" : "View Water Quality Report"}
+                {showTable ? "Hide Water Level Report" : "View Water Level Report"}
               </button>
 
-              <Link to={`/water-quality/add/${tankId}`}>
+              <button
+                style={styles.btnDanger}
+                onClick={handleDeleteAll}
+                disabled={deletingAll}
+              >
+                {deletingAll ? "Deleting..." : "Delete All Records"}
+              </button>
+
+              <Link to={`/water-level/add/${tankId}`}>
                 <button style={styles.btnSecondary}>Add New Record</button>
               </Link>
 
@@ -425,34 +464,34 @@ function WaterQualityList() {
         {showTable && (
           <div style={styles.card}>
             <div style={styles.header}>
-              <h2 style={styles.title}>Water Quality Records</h2>
+              <h2 style={styles.title}>Water Level Records</h2>
             </div>
             <div style={styles.body} ref={reportRef}>
               <div style={styles.tableWrap}>
                 <table style={styles.table}>
                   <thead>
                     <tr style={styles.theadTr}>
-                      <th style={styles.th}>Timestamp</th>
-                      <th style={styles.th}>pH Level</th>
-                      <th style={styles.th}>TDS</th>
+                      <th style={styles.th}>Tank ID</th>
+                      <th style={styles.th}>Water Level (%)</th>
                       <th style={styles.th}>Status</th>
+                      <th style={styles.th}>Recorded At</th>
                       <th style={styles.th}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageItems.map((rec) => (
                       <tr key={rec._id}>
-                        <td style={styles.td}>
-                          {new Date(rec.timestamp).toLocaleString()}
-                        </td>
-                        <td style={styles.td}>{rec.phLevel}</td>
-                        <td style={styles.td}>{rec.tds}</td>
+                        <td style={styles.td}>{rec.tankId}</td>
+                        <td style={styles.td}>{rec.currentLevel}%</td>
                         <td style={styles.td}>{rec.status}</td>
+                        <td style={styles.td}>
+                          {rec.recordedAt ? new Date(rec.recordedAt).toLocaleString() : "-"}
+                        </td>
                         <td style={styles.td}>
                           <div style={{ display: "flex", gap: 8 }}>
                             <Button
                               component={Link}
-                              to={`/water-quality/edit/${rec._id}`}
+                              to={`/water-level/edit/${rec._id}`}
                               size="small"
                               variant="outlined"
                               className="no-print"
@@ -522,4 +561,4 @@ function WaterQualityList() {
   );
 }
 
-export default WaterQualityList;
+export default WaterLevelList;

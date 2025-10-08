@@ -1,11 +1,25 @@
 // src/Component/Pages/LandingPage.jsx
 import React from "react";
 import {
-  AppBar, Toolbar, Typography, Button, Box, Container, Paper, Stack,
-  Grid, Card, CardContent, CardMedia, Avatar, Chip, Divider
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  Avatar,
+  Chip,
+  Divider,
 } from "@mui/material";
 import { keyframes } from "@mui/system";
 import { Link as RouterLink } from "react-router-dom";
+
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -13,7 +27,7 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import InsightsIcon from "@mui/icons-material/Insights";
 
-/** Water-friendly palette used in the previous version */
+/* ---------- palette ---------- */
 const c = {
   deep: "#0B2A3B",   // deep navy
   ocean: "#0E7490",  // teal
@@ -23,36 +37,36 @@ const c = {
 };
 
 /* ---------- animations ---------- */
-// fall like a droplet
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+`;
 const drip = keyframes`
   0%   { transform: translateY(-12vh) scale(.95); opacity: 0; }
   10%  { opacity: .85; }
   100% { transform: translateY(110vh) scale(1); opacity: .9; }
 `;
-// soft entrance for content
-const fadeUp = keyframes`
-  from { opacity: 0; transform: translate3d(0, 12px, 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-`;
-
 const hoverLift = {
   transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease",
-  "&:hover": { transform: "translateY(-6px)", boxShadow: 10, borderColor: "rgba(255,255,255,.25)" },
+  "&:hover": {
+    transform: "translateY(-6px)",
+    boxShadow: 10,
+    borderColor: "rgba(255,255,255,.25)",
+  },
 };
 
-/* ---------- dripping background layer (non-interactive, super light) ---------- */
+/* ---------- animated dripping layer ---------- */
 function DripLayer() {
-  // fixed set for consistent look; tweak or add more for denser effect
   const drops = [
-    { left: "6%",  size: 10, dur: 13, delay: 0 },
+    { left: "6%", size: 10, dur: 13, delay: 0 },
     { left: "14%", size: 14, dur: 16, delay: 2 },
     { left: "22%", size: 12, dur: 12, delay: 4 },
-    { left: "29%", size: 9,  dur: 11, delay: 1.5 },
+    { left: "29%", size: 9, dur: 11, delay: 1.5 },
     { left: "37%", size: 11, dur: 15, delay: 3.5 },
     { left: "44%", size: 16, dur: 18, delay: 0.8 },
     { left: "52%", size: 10, dur: 13, delay: 2.2 },
     { left: "59%", size: 13, dur: 17, delay: 4.6 },
-    { left: "66%", size: 9,  dur: 12, delay: 1.2 },
+    { left: "66%", size: 9, dur: 12, delay: 1.2 },
     { left: "73%", size: 12, dur: 16, delay: 2.8 },
     { left: "80%", size: 10, dur: 14, delay: 3.1 },
     { left: "88%", size: 15, dur: 19, delay: 0.4 },
@@ -69,13 +83,6 @@ function DripLayer() {
         overflow: "hidden",
       }}
     >
-      {/* gentle vertical gradient sheen so drips blend with background */}
-      <Box sx={{
-        position: "absolute", inset: 0,
-        background: `radial-gradient(1200px 400px at 50% -10%, rgba(255,255,255,.06), transparent),
-                     linear-gradient(180deg, ${c.deep}00, ${c.aqua}00)`,
-      }} />
-
       {drops.map((d, i) => (
         <Box
           key={i}
@@ -85,7 +92,6 @@ function DripLayer() {
             left: d.left,
             width: d.size,
             height: d.size * 1.8,
-            // pill/tear shape
             borderRadius: "50% 50% 60% 60% / 45% 45% 70% 70%",
             background: `linear-gradient(180deg, ${c.foam}, ${c.aqua}88)`,
             boxShadow: `0 8px 14px ${c.deep}55`,
@@ -110,10 +116,9 @@ export default function LandingPage() {
         background: `linear-gradient(180deg, ${c.deep} 0%, ${c.ocean} 40%, ${c.aqua} 100%)`,
       }}
     >
-      {/* animated water drip layer */}
       <DripLayer />
 
-      {/* NAVBAR (translucent over gradient) */}
+      {/* NAVBAR */}
       <AppBar
         position="sticky"
         elevation={0}
@@ -121,7 +126,7 @@ export default function LandingPage() {
           bgcolor: "rgba(11,42,59,.85)",
           backdropFilter: "saturate(180%) blur(8px)",
           borderBottom: "1px solid rgba(255,255,255,.08)",
-          zIndex: (t) => t.zIndex.appBar, // stays above drips
+          zIndex: (t) => t.zIndex.appBar,
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between", minHeight: 68 }}>
@@ -130,7 +135,11 @@ export default function LandingPage() {
             <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: .3 }}>
               Neptune
             </Typography>
-            <Chip label="smart water" size="small" sx={{ ml: 1, height: 20, bgcolor: "rgba(56,189,248,.15)", color: "#fff" }} />
+            <Chip
+              label="smart water"
+              size="small"
+              sx={{ ml: 1, height: 20, bgcolor: "rgba(56,189,248,.15)", color: "#fff" }}
+            />
           </Stack>
           <Stack direction="row" spacing={{ xs: 1, sm: 2 }}>
             <Button color="inherit" href="#about">About</Button>
@@ -149,7 +158,7 @@ export default function LandingPage() {
         </Toolbar>
       </AppBar>
 
-      {/* HERO (image removed previously) */}
+      {/* HERO (no image) */}
       <Box id="hero" sx={{ position: "relative", overflow: "hidden", py: { xs: 8, md: 12 }, color: "white", zIndex: 1 }}>
         <Box
           component="svg"
@@ -213,12 +222,25 @@ export default function LandingPage() {
         </Paper>
       </Container>
 
-      {/* FEATURES */}
+      {/* PRODUCT FEATURES — single horizontal line (scroll on small) */}
       <Container id="why" sx={{ py: 4, position: "relative", zIndex: 1 }}>
         <Typography variant="h4" align="center" sx={{ fontWeight: 900, color: "#fff", mb: 3 }}>
           Product Features
         </Typography>
-        <Grid container spacing={3}>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "nowrap",      // keep in one line
+            gap: 2,
+            overflowX: "auto",
+            pb: 1,
+            px: 1,
+            scrollSnapType: "x mandatory",
+            "&::-webkit-scrollbar": { height: 8 },
+            "&::-webkit-scrollbar-thumb": { background: "rgba(255,255,255,.25)", borderRadius: 8 },
+          }}
+        >
           {[
             { icon: <WaterDropIcon />, text: "Real-time tank level monitoring" },
             { icon: <NotificationsActiveIcon />, text: "Leak detection & instant alerts" },
@@ -227,36 +249,39 @@ export default function LandingPage() {
             { icon: <PhoneIphoneIcon />, text: "Mobile-friendly dashboards" },
             { icon: <InsightsIcon />, text: "Community conservation insights" },
           ].map((f, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3, borderRadius: 4, textAlign: "left", color: "#fff",
-                  border: "1px solid rgba(255,255,255,.12)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05))",
-                  ...hoverLift,
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
-                  <Box
-                    sx={{
-                      width: 56, height: 56, borderRadius: "50%", mr: 1.5, display: "grid", placeItems: "center",
-                      boxShadow: `0 8px 24px ${c.mint}55`,
-                      background: `radial-gradient(circle at 30% 30%, ${c.mint}AA, ${c.mint}55 60%, transparent 70%)`,
-                      color: "#06202B",
-                    }}
-                  >
-                    {f.icon}
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>{f.text}</Typography>
+            <Paper
+              key={i}
+              elevation={0}
+              sx={{
+                flex: { xs: "0 0 260px", md: "0 0 320px" }, // fixed width; scrolls if overflow
+                p: 3,
+                borderRadius: 4,
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,.18)",
+                background: "linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06))",
+                scrollSnapAlign: "start",
+                ...hoverLift,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+                <Box
+                  sx={{
+                    width: 56, height: 56, borderRadius: "50%", mr: 1.5, display: "grid", placeItems: "center",
+                    boxShadow: `0 8px 24px ${c.mint}55`,
+                    background: `radial-gradient(circle at 30% 30%, ${c.mint}AA, ${c.mint}55 60%, transparent 70%)`,
+                    color: "#06202B",
+                  }}
+                >
+                  {f.icon}
                 </Box>
-                <Typography variant="body2" sx={{ opacity: .85 }}>
-                  Neptune surfaces insights and actions to help you reduce waste while ensuring continuous supply.
-                </Typography>
-              </Paper>
-            </Grid>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{f.text}</Typography>
+              </Box>
+              <Typography variant="body2" sx={{ opacity: .85 }}>
+                Neptune surfaces insights and actions to help you reduce waste while ensuring continuous supply.
+              </Typography>
+            </Paper>
           ))}
-        </Grid>
+        </Box>
       </Container>
 
       {/* TANKS */}
@@ -274,9 +299,12 @@ export default function LandingPage() {
             <Grid item xs={12} sm={6} md={4} key={i}>
               <Card
                 sx={{
-                  borderRadius: 4, overflow: "hidden",
+                  borderRadius: 4,
+                  overflow: "hidden",
                   background: "linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55))",
-                  color: "#fff", border: "1px solid rgba(255,255,255,.12)", ...hoverLift,
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,.12)",
+                  ...hoverLift,
                 }}
               >
                 <CardMedia component="img" height="240" image={tank.img} alt={tank.name} sx={{ objectFit: "cover" }} />
@@ -308,33 +336,27 @@ export default function LandingPage() {
             <Grid item xs={12} sm={6} md={3} key={i}>
               <Paper
                 elevation={0}
-  sx={{
-    p: 3,
-    textAlign: "center",
-    borderRadius: 4,
-    color: "#fff",
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05))",
-
-    /* 🟦 new/stronger borders */
-    border: "1px solid rgba(208,243,255,.35)",          // subtle outer stroke (foam/aqua)
-    boxShadow: "0 12px 24px rgba(0,0,0,.25)",            // base depth
-    outline: "1px solid rgba(6,32,43,.35)",              // hairline dark ring
-    outlineOffset: "0px",
-
-    /* hover: brighter aqua ring + lift */
-    transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease",
-    "&:hover": {
-      transform: "translateY(-6px)",
-      boxShadow:
-        "0 18px 30px rgba(0,0,0,.35), 0 0 0 2px rgba(56,189,248,.55) inset",
-      borderColor: "rgba(208,243,255,.7)",
-    },
-  }}
->
-  <Avatar src={m.img} alt={m.name} sx={{ width: 96, height: 96, mx: "auto", mb: 2, boxShadow: 4 }} />
-  <Typography variant="h6" sx={{ fontWeight: 800 }}>{m.name}</Typography>
-  <Typography variant="body2" sx={{ opacity: .85 }}>{m.role}</Typography>
+                sx={{
+                  p: 3,
+                  textAlign: "center",
+                  borderRadius: 4,
+                  color: "#fff",
+                  background: "linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05))",
+                  border: "1px solid rgba(208,243,255,.35)",      // strong border
+                  boxShadow: "0 12px 24px rgba(0,0,0,.25)",
+                  outline: "1px solid rgba(6,32,43,.35)",
+                  outlineOffset: "0px",
+                  transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease",
+                  "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 18px 30px rgba(0,0,0,.35), 0 0 0 2px rgba(56,189,248,.55) inset",
+                    borderColor: "rgba(208,243,255,.7)",
+                  },
+                }}
+              >
+                <Avatar src={m.img} alt={m.name} sx={{ width: 96, height: 96, mx: "auto", mb: 2, boxShadow: 4 }} />
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>{m.name}</Typography>
+                <Typography variant="body2" sx={{ opacity: .85 }}>{m.role}</Typography>
               </Paper>
             </Grid>
           ))}
