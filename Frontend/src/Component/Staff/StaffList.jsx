@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -28,6 +29,7 @@ export default function Staff() {
   /* ----------------------- state ----------------------- */
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [assignedTasks, setAssignedTasks] = useState({});
 
   const [open, setOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
@@ -36,6 +38,7 @@ export default function Staff() {
     email: "",
     phone: "",
     position: "",
+    location: "",
   });
 
   // local filters
@@ -97,8 +100,28 @@ export default function Staff() {
       .finally(() => setLoading(false));
   };
 
+  const fetchAssignedTasks = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/issues");
+      const issues = await response.json();
+      
+      // Count assigned tasks for each staff member
+      const taskCounts = {};
+      issues.forEach(issue => {
+        if (issue.assignedTo) {
+          taskCounts[issue.assignedTo] = (taskCounts[issue.assignedTo] || 0) + 1;
+        }
+      });
+      
+      setAssignedTasks(taskCounts);
+    } catch (err) {
+      console.error("Error fetching assigned tasks:", err);
+    }
+  };
+
   useEffect(() => {
     fetchStaff();
+    fetchAssignedTasks();
   }, []);
 
   const handleOpen = (staff = null) => {
@@ -110,8 +133,9 @@ export default function Staff() {
             email: staff.email || "",
             phone: staff.phone || "",
             position: staff.Position || staff.position || "",
+            location: staff.location || "",
           }
-        : { name: "", email: "", phone: "", position: "" }
+        : { name: "", email: "", phone: "", position: "", location: "" }
     );
     setOpen(true);
   };
@@ -265,9 +289,10 @@ export default function Staff() {
               <MenuItem value="technician">Technician</MenuItem>
             </Select>
 
+            <Link to="/staffs/add">
             <Button
               variant="contained"
-              onClick={() => handleOpen()}
+              // onClick={() => handleOpen()}
               sx={{
                 fontWeight: 900,
                 color: "#0f172a",
@@ -279,6 +304,7 @@ export default function Staff() {
             >
               Add Staff
             </Button>
+            </Link>
           </Box>
         </Box>
       </Box>
@@ -315,6 +341,8 @@ export default function Staff() {
                 <TableCell>Email</TableCell>
                 <TableCell>Phone</TableCell>
                 <TableCell>Role</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Assigned Tasks</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -359,6 +387,19 @@ export default function Staff() {
                         }}
                       />
                     </TableCell>
+                    <TableCell sx={{ color: TEXT.dim }}>{staff.location || "—"}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={assignedTasks[staff._id || staff.id] || 0}
+                        sx={{
+                          bgcolor: assignedTasks[staff._id || staff.id] > 0 ? "rgba(34,197,94,.15)" : "rgba(148,163,184,.15)",
+                          color: assignedTasks[staff._id || staff.id] > 0 ? "#22c55e" : "#cbd5e1",
+                          border: assignedTasks[staff._id || staff.id] > 0 ? "rgba(34,197,94,.35)" : "rgba(148,163,184,.35)",
+                          fontWeight: 900,
+                        }}
+                      />
+                    </TableCell>
                     <TableCell align="right">
                       <Button
                         onClick={() => handleOpen(staff)}
@@ -396,7 +437,7 @@ export default function Staff() {
 
               {!loading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: "#94a3b8" }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: "#94a3b8" }}>
                     No staff found.
                   </TableCell>
                 </TableRow>
@@ -478,6 +519,22 @@ export default function Staff() {
             label="Position / Role"
             name="position"
             value={formData.position}
+            onChange={handleChange}
+            InputLabelProps={{ sx: { color: TEXT.dim } }}
+            InputProps={{
+              sx: {
+                color: TEXT.primary,
+                bgcolor: "#0a1220",
+                borderRadius: 2,
+              },
+            }}
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            label="Location"
+            name="location"
+            value={formData.location}
             onChange={handleChange}
             InputLabelProps={{ sx: { color: TEXT.dim } }}
             InputProps={{

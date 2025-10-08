@@ -487,20 +487,37 @@ We hope everything is working perfectly now. Thank you for your patience! 🙏`;
                             style={styles.select}
                           >
                             <option value="">-- Select Technician --</option>
-                            {techs
-                              .filter((t) => {
+                            {(() => {
+                              const availableTechs = techs.filter((t) => {
+                                // Only show technicians
+                                const isTechnician = (t.role || t.Position || t.position || "").toLowerCase().includes("tech");
+                                if (!isTechnician) return false;
+                                
+                                // If no city info available, show all technicians
                                 const tCity = city;
                                 if (!tCity) return true;
+                                
+                                // Filter by location match
+                                const techLocation = (t.location || "").toLowerCase().trim();
+                                const tankCity = String(tCity).toLowerCase().trim();
+                                
+                                return techLocation === tankCity;
+                              });
+                              
+                              if (availableTechs.length === 0 && city) {
                                 return (
-                                  (t.location || "").toLowerCase() ===
-                                  String(tCity).toLowerCase()
+                                  <option value="" disabled>
+                                    No technicians available in {city}
+                                  </option>
                                 );
-                              })
-                              .map((t) => (
+                              }
+                              
+                              return availableTechs.map((t) => (
                                 <option key={t._id} value={t._id}>
                                   {t.name} {t.location ? `(${t.location})` : ""}
                                 </option>
-                              ))}
+                              ));
+                            })()}
                           </select>
                           {issue.assignedTo && (
                             <p style={styles.assignedLabel}>

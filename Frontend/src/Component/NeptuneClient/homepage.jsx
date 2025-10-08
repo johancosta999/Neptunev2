@@ -767,6 +767,7 @@ export default function HomePage() {
           </div>
         </Link>
 
+        <Link to={`/issues/${tankId}`}>
         <div className="dashboard-card issues">
           <div className="card-header"><div className="card-icon">⚠️</div><h3>Recent Issues</h3></div>
           <div className="card-content">
@@ -787,6 +788,7 @@ export default function HomePage() {
             )}
           </div>
         </div>
+        </Link>
       </main>
 
       {/* Registered Tanks */}

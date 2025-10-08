@@ -9,7 +9,7 @@ function AddStaff() {
     email: "", 
     phone: "", 
     role: "Admin", 
-    location: "Colombo", 
+    location: "Negombo", 
     password: "" 
   });
   const [loading, setLoading] = useState(false);
@@ -103,10 +103,9 @@ function AddStaff() {
     },
   };
 
-  // Cities list (expandable)
+  // Cities list - only the required locations
   const cities = [
-    "Colombo", "Negombo", "Kurunegala", "Ja Ela",
-    "Kandy", "Galle", "Matara", "Anuradhapura", "Jaffna", "Trincomalee"
+    "Negombo", "Kurunegala", "Ja-ela", "Wennappuwa"
   ];
 
   // Generate ID before submit (simple unique pattern)
@@ -127,7 +126,7 @@ function AddStaff() {
     const payload = { ...form, id: staffId };
 
     try {
-      const res = await axios.post("http://localhost:5000/api/staffs", payload);
+      const res = await axios.post("http://localhost:5000/api/staff", payload);
       setSuccess("Staff added successfully!");
 
       // ✅ Send WhatsApp message
@@ -148,6 +147,7 @@ function AddStaff() {
 
   return (
     <div style={styles.page}>
+      <AdminNav />
       
       <div style={styles.card}>
         <div style={styles.header}>
