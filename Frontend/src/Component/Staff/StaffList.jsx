@@ -30,6 +30,7 @@ export default function Staff() {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assignedTasks, setAssignedTasks] = useState({});
+  const [refreshingTasks, setRefreshingTasks] = useState(false);
 
   const [open, setOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
@@ -100,8 +101,9 @@ export default function Staff() {
       .finally(() => setLoading(false));
   };
 
-  const fetchAssignedTasks = async () => {
+  const fetchAssignedTasks = async (showLoading = false) => {
     try {
+      if (showLoading) setRefreshingTasks(true);
       const response = await fetch("http://localhost:5000/api/issues");
       const issues = await response.json();
       
@@ -116,12 +118,27 @@ export default function Staff() {
       setAssignedTasks(taskCounts);
     } catch (err) {
       console.error("Error fetching assigned tasks:", err);
+    } finally {
+      if (showLoading) setRefreshingTasks(false);
     }
+  };
+
+  const refreshAssignedTasks = () => {
+    fetchAssignedTasks(true);
   };
 
   useEffect(() => {
     fetchStaff();
     fetchAssignedTasks();
+  }, []);
+
+  // Auto-refresh assigned tasks every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAssignedTasks();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpen = (staff = null) => {
@@ -288,6 +305,24 @@ export default function Staff() {
               <MenuItem value="seller">Seller</MenuItem>
               <MenuItem value="technician">Technician</MenuItem>
             </Select>
+
+            <Button
+              variant="contained"
+              onClick={refreshAssignedTasks}
+              disabled={refreshingTasks}
+              sx={{
+                fontWeight: 700,
+                color: "#0f172a",
+                background: `linear-gradient(135deg, #10b981, #34d399)`,
+                boxShadow: "0 8px 20px rgba(16,185,129,.28)",
+                textTransform: "none",
+                borderRadius: 2,
+                minWidth: 120,
+                opacity: refreshingTasks ? 0.7 : 1,
+              }}
+            >
+              {refreshingTasks ? "Refreshing..." : "Refresh Tasks"}
+            </Button>
 
             <Link to="/staffs/add">
             <Button
