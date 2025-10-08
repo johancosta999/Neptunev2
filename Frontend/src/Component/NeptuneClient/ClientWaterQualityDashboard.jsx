@@ -481,7 +481,7 @@ function ClientWaterQualityDashboard() {
               <ResponsiveContainer width="100%" height={360}>
                 <LineChart data={filteredRecords} margin={{ top: 12, right: 8, bottom: 6, left: -4 }}>
                   <defs>
-                    <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="phLevelGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#22d3ee" />
                       <stop offset="100%" stopColor="#60a5fa" />
                     </linearGradient>
@@ -493,7 +493,7 @@ function ClientWaterQualityDashboard() {
                       <stop offset="0%" stopColor="#10b981" />
                       <stop offset="100%" stopColor="#059669" />
                     </linearGradient>
-                    <linearGradient id="ecGrad" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="ecValueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#8b5cf6" />
                       <stop offset="100%" stopColor="#7c3aed" />
                     </linearGradient>
