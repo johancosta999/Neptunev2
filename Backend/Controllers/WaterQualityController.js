@@ -60,12 +60,12 @@ const addWaterQuality = async (req, res, next) => {
   // get tankId either from body OR params
   const tankId = req.body.tankId || req.params.tankId;
 
-  const { phLevel, tds, status, timestamp, userEmail } = req.body;
+  const { phLevel, tds, salinity, ecValue, turbidity, status, timestamp, userEmail } = req.body;
 
   // Validate required fields
-  if (!tankId || phLevel === undefined || tds === undefined || !status) {
+  if (!tankId || phLevel === undefined || tds === undefined || salinity === undefined || ecValue === undefined || turbidity === undefined || !status) {
     return res.status(400).json({ 
-      message: "Missing required fields. Please provide tankId, phLevel, tds, and status." 
+      message: "Missing required fields. Please provide tankId, phLevel, tds, salinity, ecValue, turbidity, and status." 
     });
   }
 
@@ -82,6 +82,24 @@ const addWaterQuality = async (req, res, next) => {
     });
   }
 
+  if (typeof salinity !== 'number' || salinity < 0 || salinity > 100) {
+    return res.status(400).json({ 
+      message: "Salinity must be a number between 0 and 100 ppt." 
+    });
+  }
+
+  if (typeof ecValue !== 'number' || ecValue < 0 || ecValue > 10000) {
+    return res.status(400).json({ 
+      message: "EC Value must be a number between 0 and 10000 μS/cm." 
+    });
+  }
+
+  if (typeof turbidity !== 'number' || turbidity < 0 || turbidity > 100) {
+    return res.status(400).json({ 
+      message: "Turbidity must be a number between 0 and 100 NTU." 
+    });
+  }
+
   if (!['Safe', 'Unsafe', 'safe', 'unsafe'].includes(status)) {
     return res.status(400).json({ 
       message: "Status must be either 'Safe' or 'Unsafe'." 
@@ -92,6 +110,9 @@ const addWaterQuality = async (req, res, next) => {
     const newRecord = new WaterQuality({
       tankId,
       phLevel,
+      salinity,
+      ecValue,
+      turbidity,
       tds,
       status,
       timestamp: timestamp || new Date(),
@@ -106,7 +127,7 @@ const addWaterQuality = async (req, res, next) => {
         
         if (customer && customer.customerEmail) {
           // Send email to the specific customer
-          const measurement = `PH: ${phLevel}, TDS: ${tds}`;
+          const measurement = `PH: ${phLevel}, TDS: ${tds}, Salinity: ${salinity} ppt, EC: ${ecValue} μS/cm, Turbidity: ${turbidity} NTU`;
           await sendEmail(customer.customerEmail, tankId, "Below Safe Level", measurement);
           console.log(`✅ Water quality alert email sent to customer: ${customer.customerName} (${customer.customerEmail})`);
         } else {
@@ -115,7 +136,7 @@ const addWaterQuality = async (req, res, next) => {
         
         // Also send to admin for monitoring
         const adminEmail = "johancosta08@gmail.com";
-        const adminMeasurement = `PH: ${phLevel}, TDS: ${tds}`;
+        const adminMeasurement = `PH: ${phLevel}, TDS: ${tds}, Salinity: ${salinity} ppt, EC: ${ecValue} μS/cm, Turbidity: ${turbidity} NTU`;
         await sendEmail(adminEmail, tankId, "Below Safe Level", adminMeasurement);
         console.log("✅ Water quality alert email sent to admin");
         
@@ -137,13 +158,16 @@ const addWaterQuality = async (req, res, next) => {
 
 const updateWaterQuality = async (req, res, next) => {
   const id = req.params.id;
-  const { phLevel, tds, status } = req.body;
+  const { phLevel, tds, salinity, ecValue, turbidity, status } = req.body;
 
   let record;
   try {
     record = await WaterQuality.findByIdAndUpdate(id, {
       phLevel,
       tds,
+      salinity,
+      ecValue,
+      turbidity,
       status
     }, { new: true });
   } catch (err) {

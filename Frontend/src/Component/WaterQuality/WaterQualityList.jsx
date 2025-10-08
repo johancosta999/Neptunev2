@@ -548,7 +548,11 @@ function WaterQualityList() {
               </div>
 
               {/* Pagination */}
-              <div style={styles.pagination}>
+              <div style={{ ...styles.pagination, justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ color: '#9aa3b2', fontSize: '14px' }}>
+                  Page {currentPage} of {totalPages} ({filteredRecords.length} records)
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button
                   style={styles.pageBtn}
                   disabled={currentPage === 1}
@@ -556,19 +560,87 @@ function WaterQualityList() {
                 >
                   Prev
                 </button>
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                  const page = idx + 1;
-                  const active = page === currentPage;
-                  return (
+                
+                {/* Smart pagination with ellipsis */}
+                {(() => {
+                  const maxVisiblePages = 5;
+                  const pages = [];
+                  
+                  if (totalPages <= maxVisiblePages) {
+                    // Show all pages if total is small
+                    for (let i = 1; i <= totalPages; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          style={i === currentPage ? styles.pageBtnActive : styles.pageBtn}
+                          onClick={() => setCurrentPage(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                  } else {
+                    // Show smart pagination with ellipsis
+                    const startPage = Math.max(1, currentPage - 2);
+                    const endPage = Math.min(totalPages, currentPage + 2);
+                    
+                    // Always show first page
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key={1}
+                          style={styles.pageBtn}
+                          onClick={() => setCurrentPage(1)}
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <span key="ellipsis1" style={{ padding: "0 8px", color: "#9aa3b2" }}>
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+                    
+                    // Show middle pages
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          style={i === currentPage ? styles.pageBtnActive : styles.pageBtn}
+                          onClick={() => setCurrentPage(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    
+                    // Always show last page
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <span key="ellipsis2" style={{ padding: "0 8px", color: "#9aa3b2" }}>
+                            ...
+                          </span>
+                        );
+                      }
+                      pages.push(
                     <button
-                      key={page}
-                      style={active ? styles.pageBtnActive : styles.pageBtn}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
+                          key={totalPages}
+                          style={styles.pageBtn}
+                          onClick={() => setCurrentPage(totalPages)}
+                        >
+                          {totalPages}
                     </button>
                   );
-                })}
+                    }
+                  }
+                  
+                  return pages;
+                })()}
+                
                 <button
                   style={styles.pageBtn}
                   disabled={currentPage === totalPages}
@@ -576,6 +648,7 @@ function WaterQualityList() {
                 >
                   Next
                 </button>
+                </div>
               </div>
             </div>
           </div>
