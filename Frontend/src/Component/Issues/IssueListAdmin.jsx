@@ -12,6 +12,11 @@ export default function IssueListAdmin() {
 
   const [techs, setTechs] = useState([]);
   const [tankCityById, setTankCityById] = useState({});
+  
+  // Date filtering state
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filteredIssues, setFilteredIssues] = useState([]);
 
   // --------- Styles (inline, no external CSS) ----------
   const styles = {
@@ -178,6 +183,61 @@ export default function IssueListAdmin() {
       borderRadius: 10,
       border: "1px solid rgba(148,163,184,.25)",
     },
+
+    // Date filter styles
+    filterSection: {
+      padding: "16px 20px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      background: "rgba(15,23,42,0.3)",
+    },
+    filterRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "16px",
+      flexWrap: "wrap",
+    },
+    filterLabel: {
+      color: "#9aa3b2",
+      fontSize: "14px",
+      fontWeight: 600,
+      minWidth: "80px",
+    },
+    dateInput: {
+      padding: "8px 12px",
+      borderRadius: "8px",
+      border: "1px solid rgba(148,163,184,.35)",
+      background: "rgba(2,6,23,.6)",
+      color: "#e5e7eb",
+      fontSize: "14px",
+      minWidth: "150px",
+    },
+    filterBtn: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: "1px solid rgba(34,211,238,.35)",
+      background: "rgba(34,211,238,.1)",
+      color: "#22d3ee",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: "14px",
+      transition: "all 0.2s ease",
+    },
+    clearBtn: {
+      padding: "8px 16px",
+      borderRadius: "8px",
+      border: "1px solid rgba(148,163,184,.35)",
+      background: "rgba(148,163,184,.1)",
+      color: "#cbd5e1",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: "14px",
+      transition: "all 0.2s ease",
+    },
+    filterInfo: {
+      color: "#9aa3b2",
+      fontSize: "12px",
+      marginTop: "8px",
+    },
   };
 
   // ---------- Global resets (fix white top line) ----------
@@ -224,6 +284,7 @@ export default function IssueListAdmin() {
           return aAssigned - bAssigned; // unassigned first
         });
         setIssues(sorted);
+        setFilteredIssues(sorted);
       } catch (err) {
         console.error("Error fetching issues:", err);
         setError("Failed to load issues. Please try again.");
@@ -233,6 +294,43 @@ export default function IssueListAdmin() {
     };
     if (tankId) fetchIssues();
   }, [tankId]);
+
+  // Date filtering logic
+  const filterIssuesByDate = () => {
+    if (!startDate && !endDate) {
+      setFilteredIssues(issues);
+      return;
+    }
+
+    const filtered = issues.filter((issue) => {
+      const issueDate = new Date(issue.createdAt);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      if (start && end) {
+        return issueDate >= start && issueDate <= end;
+      } else if (start) {
+        return issueDate >= start;
+      } else if (end) {
+        return issueDate <= end;
+      }
+      return true;
+    });
+
+    setFilteredIssues(filtered);
+  };
+
+  // Clear date filters
+  const clearDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setFilteredIssues(issues);
+  };
+
+  // Apply filters when dates change
+  useEffect(() => {
+    filterIssuesByDate();
+  }, [startDate, endDate, issues]);
 
   useEffect(() => {
     const loadTechs = async () => {
@@ -408,6 +506,67 @@ We hope everything is working perfectly now. Thank you for your patience! 🙏`;
               ← Back
             </button>
           </div>
+          
+          {/* Date Filter Section */}
+          <div style={styles.filterSection}>
+            <div style={styles.filterRow}>
+              <label style={styles.filterLabel}>From Date:</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={styles.dateInput}
+                placeholder="Start date"
+              />
+              
+              <label style={styles.filterLabel}>To Date:</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={styles.dateInput}
+                placeholder="End date"
+              />
+              
+              <button
+                onClick={filterIssuesByDate}
+                style={styles.filterBtn}
+                onMouseOver={(e) => {
+                  e.target.style.background = "rgba(34,211,238,.2)";
+                  e.target.style.transform = "translateY(-1px)";
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = "rgba(34,211,238,.1)";
+                  e.target.style.transform = "translateY(0)";
+                }}
+              >
+                Filter
+              </button>
+              
+              <button
+                onClick={clearDateFilters}
+                style={styles.clearBtn}
+                onMouseOver={(e) => {
+                  e.target.style.background = "rgba(148,163,184,.2)";
+                  e.target.style.transform = "translateY(-1px)";
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = "rgba(148,163,184,.1)";
+                  e.target.style.transform = "translateY(0)";
+                }}
+              >
+                Clear
+              </button>
+            </div>
+            
+            {(startDate || endDate) && (
+              <div style={styles.filterInfo}>
+                Showing {filteredIssues.length} of {issues.length} issues
+                {startDate && ` from ${new Date(startDate).toLocaleDateString()}`}
+                {endDate && ` to ${new Date(endDate).toLocaleDateString()}`}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Issues list card */}
@@ -420,9 +579,13 @@ We hope everything is working perfectly now. Thank you for your patience! 🙏`;
               <div style={styles.empty}>No issues reported yet.</div>
             )}
 
+            {!loading && !error && filteredIssues.length === 0 && issues.length > 0 && (
+              <div style={styles.empty}>No issues found for the selected date range.</div>
+            )}
+
             {!loading &&
               !error &&
-              issues.map((issue) => {
+              filteredIssues.map((issue) => {
                 const city = tankCityById[issue.tankId];
                 return (
                   <div key={issue._id} style={styles.issue}>
