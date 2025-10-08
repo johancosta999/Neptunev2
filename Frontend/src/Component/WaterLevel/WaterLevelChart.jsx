@@ -11,44 +11,30 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import "./WaterLevel.css";
 
-function WaterLevelChart() {
+function WaterLevelChart({ records = [] }) {
   const { tankId } = useParams();
-  const [records, setRecords] = useState([]);
+  const [chartRecords, setChartRecords] = useState([]);
   const [range, setRange] = useState("1w");
+  const [loading, setLoading] = useState(false);
 
-  // 🎨 Professional UI styles
-  const styles = {
-    card: {
-      backgroundColor: "#ffffff",
-      border: "1px solid #e5e7eb",
-      borderRadius: "12px",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.1)",
-      marginBottom: "16px",
-    },
-    header: {
-      padding: "16px 20px",
-      borderBottom: "1px solid #e5e7eb",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: "12px",
-      flexWrap: "wrap",
-    },
-    title: { fontSize: "18px", fontWeight: 700, color: "#111827", margin: 0 },
-    controls: { display: "flex", alignItems: "center", gap: "10px" },
-    select: { padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: "8px", backgroundColor: "#ffffff" },
-    body: { padding: "12px 16px" },
-  };
+  // Color palette
+  const WATER_BLUE = "#0ea5e9";
+  const WATER_CYAN = "#06b6d4";
+  const INK = "rgba(17,24,39,.75)";
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(
         `http://localhost:5000/api/waterlevel?tankId=${tankId}`
       );
-      setRecords(res.data.data);
+      setChartRecords(res.data.data || []);
     } catch (err) {
       console.error("Error fetching water level data", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,38 +51,74 @@ function WaterLevelChart() {
     );
   };
 
-  const filteredRecords = filterByRange(records);
+  // Use passed records or fetched records
+  const dataToUse = records.length > 0 ? records : chartRecords;
+  const filteredRecords = filterByRange(dataToUse);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, [tankId]);
+    if (records.length === 0) {
+      fetchData();
+      const interval = setInterval(fetchData, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [tankId, records.length]);
 
   return (
-    <div style={styles.card}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>Water Level (%) - {tankId}</h3>
-        <div style={styles.controls}>
-          <label htmlFor="range">Range</label>
+    <div className="chart-container">
+      <div className="chart-header">
+        <h3 className="chart-title">💧 Water Level - {tankId}</h3>
+        <div className="chart-controls">
+          <label htmlFor="range" style={{ color: "var(--muted)", fontSize: "14px" }}>Range:</label>
           <select
             id="range"
             value={range}
             onChange={(e) => setRange(e.target.value)}
-            style={styles.select}
+            className="chart-select"
           >
             <option value="1h">Last Hour</option>
             <option value="1d">Last Day</option>
             <option value="1w">Last Week</option>
           </select>
+          <span style={{ 
+            fontSize: "12px", 
+            color: "var(--muted)", 
+            background: "rgba(34,211,238,.1)", 
+            padding: "4px 8px", 
+            borderRadius: "6px",
+            border: "1px solid rgba(34,211,238,.2)"
+          }}>
+            Live (5s refresh)
+          </span>
         </div>
       </div>
-      <div style={styles.body}>
+      
+      <div style={{ position: "relative" }}>
+        {loading && (
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 10,
+            background: "rgba(0,0,0,.8)",
+            color: "white",
+            padding: "20px",
+            borderRadius: "8px",
+            fontSize: "14px"
+          }}>
+            Loading chart data...
+          </div>
+        )}
+        
         <ResponsiveContainer width="100%" height={420}>
           <LineChart data={filteredRecords}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="rgba(145,177,208,.2)" 
+            />
             <XAxis
               dataKey="recordedAt"
+              stroke="#9fb8d3"
               tickFormatter={(value) =>
                 new Date(value).toLocaleTimeString("en-US", {
                   hour: "2-digit",
@@ -104,24 +126,51 @@ function WaterLevelChart() {
                 })
               }
             />
-            <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+            <YAxis 
+              domain={[0, 100]} 
+              tickFormatter={(v) => `${v}%`}
+              stroke="#9fb8d3"
+            />
             <Tooltip
+              contentStyle={{ 
+                background: INK, 
+                border: "1px solid rgba(255,255,255,.08)", 
+                borderRadius: 12,
+                color: "var(--text)"
+              }}
+              labelStyle={{ color: "var(--text)" }}
+              itemStyle={{ color: "var(--text)" }}
               labelFormatter={(value) => `Time: ${new Date(value).toLocaleString()}`}
               formatter={(val) => [`${val}%`, "Water Level"]}
             />
-            <Legend verticalAlign="top" />
+            <Legend 
+              verticalAlign="top" 
+              wrapperStyle={{ color: "var(--text)" }} 
+            />
             <Line
               type="monotone"
               dataKey="currentLevel"
-              stroke="#2563eb"
+              stroke={WATER_BLUE}
               strokeWidth={3}
-              activeDot={{ r: 6 }}
-              name="Water Level"
+              activeDot={{ 
+                r: 6, 
+                fill: WATER_CYAN,
+                stroke: WATER_BLUE,
+                strokeWidth: 2
+              }}
+              name="Water Level (%)"
               dot={false}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
+      {filteredRecords.length === 0 && !loading && (
+        <div className="empty-state">
+          <div className="empty-icon">📊</div>
+          <div className="empty-text">No water level data available for the selected range</div>
+        </div>
+      )}
     </div>
   );
 }
