@@ -18,6 +18,13 @@ function ClientWaterQualityDashboard() {
   const [records, setRecords] = useState([]);
   const [range, setRange] = useState("1w");
   const [loading, setLoading] = useState(true);
+  const [selectedParameters, setSelectedParameters] = useState({
+    phLevel: true,
+    tds: true,
+    salinity: false,
+    ecValue: false,
+    turbidity: false
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,9 +65,93 @@ function ClientWaterQualityDashboard() {
     records.length > 0
       ? (records.reduce((s, r) => s + (r.tds || 0), 0) / records.length).toFixed(2)
       : "--";
+  const avgSalinity =
+    records.length > 0
+      ? (records.reduce((s, r) => s + (r.salinity || 0), 0) / records.length).toFixed(2)
+      : "--";
+  const avgEcValue =
+    records.length > 0
+      ? (records.reduce((s, r) => s + (r.ecValue || 0), 0) / records.length).toFixed(2)
+      : "--";
+  const avgTurbidity =
+    records.length > 0
+      ? (records.reduce((s, r) => s + (r.turbidity || 0), 0) / records.length).toFixed(2)
+      : "--";
 
   const statusColor =
     latest?.status?.toLowerCase() === "unsafe" ? "#ef4444" : "#10b981";
+
+  // Parameter Configuration
+  const parameterConfig = {
+    phLevel: { 
+      name: "pH Level", 
+      unit: "", 
+      color: "#22d3ee", 
+      yAxisId: "left", 
+      domain: [0, 14],
+      icon: "🧪"
+    },
+    tds: { 
+      name: "TDS", 
+      unit: "mg/L", 
+      color: "#a78bfa", 
+      yAxisId: "right", 
+      domain: [0, 1000],
+      icon: "💧"
+    },
+    salinity: { 
+      name: "Salinity", 
+      unit: "ppt", 
+      color: "#10b981", 
+      yAxisId: "salinity", 
+      domain: [0, 100],
+      icon: "🧂"
+    },
+    ecValue: { 
+      name: "EC Value", 
+      unit: "μS/cm", 
+      color: "#8b5cf6", 
+      yAxisId: "ecValue", 
+      domain: [0, 10000],
+      icon: "⚡"
+    },
+    turbidity: { 
+      name: "Turbidity", 
+      unit: "NTU", 
+      color: "#f97316", 
+      yAxisId: "turbidity", 
+      domain: [0, 100],
+      icon: "🌊"
+    }
+  };
+
+  // Handlers
+  const handleParameterChange = (parameter) => {
+    setSelectedParameters(prev => ({
+      ...prev,
+      [parameter]: !prev[parameter]
+    }));
+  };
+
+  const handleSelectAll = () => {
+    setSelectedParameters({
+      phLevel: true,
+      tds: true,
+      salinity: true,
+      ecValue: true,
+      turbidity: true
+    });
+  };
+
+  const handleClearAll = () => {
+    setSelectedParameters({
+      phLevel: false,
+      tds: false,
+      salinity: false,
+      ecValue: false,
+      turbidity: false
+    });
+  };
 
   /* ------------------------------ STYLES ------------------------------ */
   const S = {
@@ -253,11 +344,107 @@ function ClientWaterQualityDashboard() {
             <div style={{ color: "#a9c4e0" }}>Avg. TDS</div>
           </div>
           <div style={S.mcard}>
+            <div style={S.micon}>🧂</div>
+            <div style={{ fontWeight: 900, fontSize: 20 }}>{avgSalinity}</div>
+            <div style={{ color: "#a9c4e0" }}>Avg. Salinity</div>
+          </div>
+          <div style={S.mcard}>
+            <div style={S.micon}>⚡</div>
+            <div style={{ fontWeight: 900, fontSize: 20 }}>{avgEcValue}</div>
+            <div style={{ color: "#a9c4e0" }}>Avg. EC Value</div>
+          </div>
+          <div style={S.mcard}>
+            <div style={S.micon}>🌊</div>
+            <div style={{ fontWeight: 900, fontSize: 20 }}>{avgTurbidity}</div>
+            <div style={{ color: "#a9c4e0" }}>Avg. Turbidity</div>
+          </div>
+          <div style={S.mcard}>
             <div style={S.micon}>⏰</div>
             <div style={{ fontWeight: 900, fontSize: 16 }}>
               {latest ? new Date(latest.timestamp).toLocaleString() : "--"}
             </div>
             <div style={{ color: "#a9c4e0" }}>Last Update</div>
+          </div>
+        </div>
+
+        {/* Parameter Selector */}
+        <div style={S.card}>
+          <div style={S.body}>
+            <h2 style={{ color: "#9ddcff", margin: "0 0 16px 0", fontWeight: 900 }}>
+              Select Parameters to Display
+            </h2>
+            <div style={{ 
+              display: "flex", 
+              flexWrap: "wrap", 
+              gap: "12px", 
+              alignItems: "center",
+              marginBottom: "16px"
+            }}>
+              <div style={{ display: "flex", gap: "8px", marginRight: "16px" }}>
+                <button
+                  onClick={handleSelectAll}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid rgba(16,185,129,0.3)",
+                    background: "rgba(16,185,129,0.1)",
+                    color: "#10b981",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={handleClearAll}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid rgba(148,163,184,0.3)",
+                    background: "rgba(148,163,184,0.1)",
+                    color: "#9aa3b2",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}
+                >
+                  Clear All
+                </button>
+              </div>
+              {Object.entries(parameterConfig).map(([key, config]) => (
+                <label 
+                  key={key}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: selectedParameters[key] 
+                      ? `rgba(${config.color.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(', ')}, 0.1)` 
+                      : "rgba(148,163,184,0.1)",
+                    border: `1px solid ${selectedParameters[key] ? config.color : "rgba(148,163,184,0.3)"}`,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    color: selectedParameters[key] ? config.color : "#9aa3b2"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedParameters[key]}
+                    onChange={() => handleParameterChange(key)}
+                    style={{ margin: 0 }}
+                  />
+                  <span style={{ 
+                    fontWeight: selectedParameters[key] ? "700" : "500",
+                    fontSize: "14px"
+                  }}>
+                    {config.icon} {config.name} {config.unit && `(${config.unit})`}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -290,89 +477,113 @@ function ClientWaterQualityDashboard() {
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={360}>
-              <LineChart data={filteredRecords} margin={{ top: 12, right: 8, bottom: 6, left: -4 }}>
-                <defs>
-                  <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22d3ee" />
-                    <stop offset="100%" stopColor="#60a5fa" />
-                  </linearGradient>
-                  <linearGradient id="tdsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#a78bfa" />
-                    <stop offset="100%" stopColor="#60a5fa" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.18)" />
-                <XAxis
-                  dataKey="timestamp"
-                  tickFormatter={(v) =>
-                    new Date(v).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  }
-                  tick={{ fill: "#cfeaff" }}
-                  axisLine={{ stroke: "rgba(148,163,184,.25)" }}
-                />
-                <YAxis
-                  yAxisId="left"
-                  domain={[0, 14]}
-                  tickCount={8}
-                  tick={{ fill: "#cfeaff" }}
-                  axisLine={{ stroke: "rgba(148,163,184,.25)" }}
-                  label={{
-                    value: "pH",
-                    angle: -90,
-                    position: "insideLeft",
-                    fill: "#9ddcff",
-                  }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  domain={[0, 1000]}
-                  tick={{ fill: "#cfeaff" }}
-                  axisLine={{ stroke: "rgba(148,163,184,.25)" }}
-                  label={{
-                    value: "TDS (mg/L)",
-                    angle: 90,
-                    position: "insideRight",
-                    fill: "#cbd5ff",
-                  }}
-                />
-                <Tooltip
-                  labelFormatter={(v) => `Time: ${new Date(v).toLocaleString()}`}
-                  contentStyle={{
-                    background: "rgba(3,7,18,.92)",
-                    border: "1px solid rgba(148,163,184,.25)",
-                    borderRadius: 10,
-                    color: "#eaf6ff",
-                  }}
-                />
-                <Legend
-                  verticalAlign="top"
-                  wrapperStyle={{ color: "#cfeaff", paddingBottom: 10 }}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="phLevel"
-                  stroke="url(#phGrad)"
-                  strokeWidth={3}
-                  name="pH Level"
-                  dot={false}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="tds"
-                  stroke="url(#tdsGrad)"
-                  strokeWidth={3}
-                  name="TDS (mg/L)"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {Object.values(selectedParameters).some(selected => selected) ? (
+              <ResponsiveContainer width="100%" height={360}>
+                <LineChart data={filteredRecords} margin={{ top: 12, right: 8, bottom: 6, left: -4 }}>
+                  <defs>
+                    <linearGradient id="phGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#22d3ee" />
+                      <stop offset="100%" stopColor="#60a5fa" />
+                    </linearGradient>
+                    <linearGradient id="tdsGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#a78bfa" />
+                      <stop offset="100%" stopColor="#60a5fa" />
+                    </linearGradient>
+                    <linearGradient id="salinityGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#059669" />
+                    </linearGradient>
+                    <linearGradient id="ecGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#7c3aed" />
+                    </linearGradient>
+                    <linearGradient id="turbidityGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ea580c" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,.18)" />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(v) =>
+                      new Date(v).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    }
+                    tick={{ fill: "#cfeaff" }}
+                    axisLine={{ stroke: "rgba(148,163,184,.25)" }}
+                  />
+                  {Object.entries(parameterConfig).map(([key, config]) => 
+                    selectedParameters[key] && (
+                      <YAxis
+                        key={key}
+                        yAxisId={config.yAxisId}
+                        orientation={config.yAxisId === "left" ? "left" : "right"}
+                        domain={config.domain}
+                        tick={{ fill: "#cfeaff" }}
+                        axisLine={{ stroke: "rgba(148,163,184,.25)" }}
+                        label={{
+                          value: config.name + (config.unit ? ` (${config.unit})` : ''),
+                          angle: config.yAxisId === "left" ? -90 : 90,
+                          position: config.yAxisId === "left" ? "insideLeft" : "insideRight",
+                          fill: config.yAxisId === "left" ? "#9ddcff" : "#cbd5ff",
+                        }}
+                      />
+                    )
+                  )}
+                  <Tooltip
+                    labelFormatter={(v) => `Time: ${new Date(v).toLocaleString()}`}
+                    contentStyle={{
+                      background: "rgba(3,7,18,.92)",
+                      border: "1px solid rgba(148,163,184,.25)",
+                      borderRadius: 10,
+                      color: "#eaf6ff",
+                    }}
+                    formatter={(val, name, props) => {
+                      const config = parameterConfig[props.dataKey];
+                      return config ? [val, `${config.name} ${config.unit ? `(${config.unit})` : ''}`] : [val, name];
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    wrapperStyle={{ color: "#cfeaff", paddingBottom: 10 }}
+                  />
+                  {Object.entries(parameterConfig).map(([key, config]) => 
+                    selectedParameters[key] && (
+                      <Line
+                        key={key}
+                        yAxisId={config.yAxisId}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={`url(#${key}Grad)`}
+                        strokeWidth={3}
+                        name={`${config.name} ${config.unit ? `(${config.unit})` : ''}`}
+                        dot={false}
+                      />
+                    )
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "300px",
+                color: "#9aa3b2",
+                textAlign: "center"
+              }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>📊</div>
+                <h3 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "600" }}>
+                  No Parameters Selected
+                </h3>
+                <p style={{ margin: 0, fontSize: "14px", opacity: 0.8 }}>
+                  Please select at least one parameter to display on the chart
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -389,13 +600,16 @@ function ClientWaterQualityDashboard() {
                     <th style={S.th}>Date/Time</th>
                     <th style={S.th}>pH</th>
                     <th style={S.th}>TDS</th>
+                    <th style={S.th}>Salinity</th>
+                    <th style={S.th}>EC Value</th>
+                    <th style={S.th}>Turbidity</th>
                     <th style={S.th}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td style={S.td} colSpan="4">
+                      <td style={S.td} colSpan="7">
                         Loading...
                       </td>
                     </tr>
@@ -410,6 +624,9 @@ function ClientWaterQualityDashboard() {
                           </td>
                           <td style={S.td}>{rec.phLevel}</td>
                           <td style={S.td}>{rec.tds}</td>
+                          <td style={S.td}>{rec.salinity || 'N/A'} ppt</td>
+                          <td style={S.td}>{rec.ecValue || 'N/A'} μS/cm</td>
+                          <td style={S.td}>{rec.turbidity || 'N/A'} NTU</td>
                           <td
                             style={{
                               ...S.td,
@@ -426,7 +643,7 @@ function ClientWaterQualityDashboard() {
                       ))
                   ) : (
                     <tr>
-                      <td style={S.td} colSpan="4">
+                      <td style={S.td} colSpan="7">
                         No data available.
                       </td>
                     </tr>
@@ -446,12 +663,19 @@ function ClientWaterQualityDashboard() {
 
         {/* Info/help */}
         <div style={S.info}>
-          <div style={{ fontWeight: 900, marginBottom: 4 }}>
+          <div style={{ fontWeight: 900, marginBottom: 8 }}>
             What do these values mean?
           </div>
-          pH should be between 6.5 and 8.5 for safe water. TDS (Total Dissolved
-          Solids) below 500 mg/L is considered good. If status shows “Unsafe”,
-          please take action or contact support.
+          <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+            <div><strong>pH:</strong> Should be between 6.5 and 8.5 for safe water</div>
+            <div><strong>TDS:</strong> Total Dissolved Solids below 500 mg/L is considered good</div>
+            <div><strong>Salinity:</strong> Fresh water (&lt;0.5 ppt), Brackish (0.5-35 ppt), Brine (&gt;35 ppt)</div>
+            <div><strong>EC Value:</strong> Electrical Conductivity - Low (&lt;100 μS/cm), Normal (100-2000 μS/cm), High (&gt;2000 μS/cm)</div>
+            <div><strong>Turbidity:</strong> Water clarity - Clear (&lt;1 NTU), Slightly cloudy (1-10 NTU), Turbid (&gt;10 NTU)</div>
+            <div style={{ marginTop: 8, fontWeight: 700 }}>
+              If status shows "Unsafe", please take action or contact support.
+            </div>
+          </div>
         </div>
       </div>
     </div>

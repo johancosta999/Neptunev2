@@ -230,9 +230,20 @@ function WaterQualityList() {
     records.forEach((rec) => {
       const date = new Date(rec.timestamp).toLocaleDateString();
       if (!grouped[date])
-        grouped[date] = { phTotal: 0, tdsTotal: 0, count: 0, statusCount: {} };
+        grouped[date] = { 
+          phTotal: 0, 
+          tdsTotal: 0, 
+          salinityTotal: 0, 
+          ecValueTotal: 0, 
+          turbidityTotal: 0, 
+          count: 0, 
+          statusCount: {} 
+        };
       grouped[date].phTotal += rec.phLevel;
       grouped[date].tdsTotal += rec.tds;
+      grouped[date].salinityTotal += rec.salinity || 0;
+      grouped[date].ecValueTotal += rec.ecValue || 0;
+      grouped[date].turbidityTotal += rec.turbidity || 0;
       grouped[date].count += 1;
       grouped[date].statusCount[rec.status] =
         (grouped[date].statusCount[rec.status] || 0) + 1;
@@ -241,10 +252,13 @@ function WaterQualityList() {
     return Object.entries(grouped).map(([date, values]) => {
       const avgPH = (values.phTotal / values.count).toFixed(2);
       const avgTDS = (values.tdsTotal / values.count).toFixed(2);
+      const avgSalinity = (values.salinityTotal / values.count).toFixed(2);
+      const avgECValue = (values.ecValueTotal / values.count).toFixed(2);
+      const avgTurbidity = (values.turbidityTotal / values.count).toFixed(2);
       const frequentStatus = Object.entries(values.statusCount).reduce((a, b) =>
         a[1] > b[1] ? a : b
       )[0];
-      return { date, avgPH, avgTDS, frequentStatus };
+      return { date, avgPH, avgTDS, avgSalinity, avgECValue, avgTurbidity, frequentStatus };
     });
   };
 
@@ -372,8 +386,11 @@ function WaterQualityList() {
                 <thead>
                   <tr style={styles.theadTr}>
                     <th style={styles.th}>Date</th>
-                    <th style={styles.th}>Average pH</th>
-                    <th style={styles.th}>Average TDS</th>
+                    <th style={styles.th}>Avg pH</th>
+                    <th style={styles.th}>Avg TDS</th>
+                    <th style={styles.th}>Avg Salinity</th>
+                    <th style={styles.th}>Avg EC Value</th>
+                    <th style={styles.th}>Avg Turbidity</th>
                     <th style={styles.th}>Most Common Status</th>
                   </tr>
                 </thead>
@@ -383,12 +400,15 @@ function WaterQualityList() {
                       <td style={styles.td}>{row.date}</td>
                       <td style={styles.td}>{row.avgPH}</td>
                       <td style={styles.td}>{row.avgTDS}</td>
+                      <td style={styles.td}>{row.avgSalinity} ppt</td>
+                      <td style={styles.td}>{row.avgECValue} μS/cm</td>
+                      <td style={styles.td}>{row.avgTurbidity} NTU</td>
                       <td style={styles.td}>{row.frequentStatus}</td>
                     </tr>
                   ))}
                   {filteredSummary.length === 0 && (
                     <tr>
-                      <td colSpan={4} style={styles.td}>
+                      <td colSpan={7} style={styles.td}>
                         No summary data for selected range.
                       </td>
                     </tr>
@@ -435,6 +455,9 @@ function WaterQualityList() {
                       <th style={styles.th}>Timestamp</th>
                       <th style={styles.th}>pH Level</th>
                       <th style={styles.th}>TDS</th>
+                      <th style={styles.th}>Salinity</th>
+                      <th style={styles.th}>EC Value</th>
+                      <th style={styles.th}>Turbidity</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Actions</th>
                     </tr>
@@ -447,6 +470,9 @@ function WaterQualityList() {
                         </td>
                         <td style={styles.td}>{rec.phLevel}</td>
                         <td style={styles.td}>{rec.tds}</td>
+                        <td style={styles.td}>{rec.salinity || 'N/A'} ppt</td>
+                        <td style={styles.td}>{rec.ecValue || 'N/A'} μS/cm</td>
+                        <td style={styles.td}>{rec.turbidity || 'N/A'} NTU</td>
                         <td style={styles.td}>{rec.status}</td>
                         <td style={styles.td}>
                           <div style={{ display: "flex", gap: 8 }}>
@@ -475,7 +501,7 @@ function WaterQualityList() {
                     ))}
                     {pageItems.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={styles.td}>
+                        <td colSpan={8} style={styles.td}>
                           No records for selected range.
                         </td>
                       </tr>

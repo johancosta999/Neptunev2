@@ -7,6 +7,9 @@ function EditWaterQuality() {
   const [inputs, setInputs] = useState({
     phLevel: "",
     tds: "",
+    salinity: "",
+    ecValue: "",
+    turbidity: "",
     status: "",
   });
   const [loading, setLoading] = useState(false);
@@ -38,6 +41,9 @@ function EditWaterQuality() {
       await axios.put(`http://localhost:5000/api/waterquality/${id}`, {
         phLevel: Number(inputs.phLevel),
         tds: Number(inputs.tds),
+        salinity: Number(inputs.salinity),
+        ecValue: Number(inputs.ecValue),
+        turbidity: Number(inputs.turbidity),
         status: String(inputs.status),
       });
       setSuccess("Water quality record updated successfully!");
@@ -129,6 +135,66 @@ function EditWaterQuality() {
                 min="0"
                 max="1000"
                 step="1"
+                className="form-input"
+                required
+              />
+            </div>
+
+            {/* Salinity Input */}
+            <div className="form-group">
+              <label htmlFor="salinity" className="form-label">
+                🧂 Salinity
+              </label>
+              <input
+                type="number"
+                id="salinity"
+                name="salinity"
+                value={inputs.salinity}
+                onChange={handleChange}
+                placeholder="Enter salinity in ppt"
+                min="0"
+                max="100"
+                step="0.1"
+                className="form-input"
+                required
+              />
+            </div>
+
+            {/* EC Value Input */}
+            <div className="form-group">
+              <label htmlFor="ecValue" className="form-label">
+                ⚡ EC Value (Electrical Conductivity)
+              </label>
+              <input
+                type="number"
+                id="ecValue"
+                name="ecValue"
+                value={inputs.ecValue}
+                onChange={handleChange}
+                placeholder="Enter EC value in μS/cm"
+                min="0"
+                max="10000"
+                step="1"
+                className="form-input"
+                required
+              />
+            </div>
+
+            {/* Turbidity Input */}
+            <div className="form-group">
+              <label htmlFor="turbidity" className="form-label">
+                🌊 Turbidity
+              </label>
+              <input
+                type="number"
+                id="turbidity"
+                name="turbidity"
+                value={inputs.turbidity}
+                onChange={handleChange}
+                placeholder="Enter turbidity in NTU"
+                min="0"
+                max="100"
+                step="0.1"
                 className="form-input"
                 required
               />

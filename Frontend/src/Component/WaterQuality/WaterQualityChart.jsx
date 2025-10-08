@@ -16,10 +16,20 @@ function WaterQualityChart() {
   const { tankId } = useParams();
   const [records, setRecords] = useState([]);
   const [range, setRange] = useState("1w");
+  const [selectedParameters, setSelectedParameters] = useState({
+    phLevel: true,
+    tds: true,
+    salinity: false,
+    ecValue: false,
+    turbidity: false
+  });
 
   // ---- Palette
   const BLUE = "#0ea5e9";     // TDS line
   const AMBER = "#f59e42";    // pH line
+  const GREEN = "#10b981";    // Salinity line
+  const PURPLE = "#8b5cf6";   // EC Value line
+  const ORANGE = "#f97316";   // Turbidity line
   const INK = "rgba(17,24,39,.75)";
 
   // ---- Styles
@@ -112,10 +122,96 @@ function WaterQualityChart() {
       animation: "wq-fadeUp .6s ease both .05s",
     },
     cardBody: { padding: "16px 16px 6px" },
+    header: {
+      padding: "16px 20px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap",
+    },
+    body: { padding: "16px 20px" },
+  };
+
+  // ---- Parameter Configuration
+  const parameterConfig = {
+    phLevel: { 
+      name: "pH Level", 
+      unit: "", 
+      color: AMBER, 
+      yAxisId: "right", 
+      domain: [0, 14],
+      stroke: "#fcd19c",
+      label: "pH"
+    },
+    tds: { 
+      name: "TDS", 
+      unit: "mg/L", 
+      color: BLUE, 
+      yAxisId: "left", 
+      domain: [0, 1000],
+      stroke: "#93c5fd",
+      label: "TDS (mg/L)"
+    },
+    salinity: { 
+      name: "Salinity", 
+      unit: "ppt", 
+      color: GREEN, 
+      yAxisId: "salinity", 
+      domain: [0, 100],
+      stroke: "#10b981",
+      label: "Salinity (ppt)"
+    },
+    ecValue: { 
+      name: "EC Value", 
+      unit: "μS/cm", 
+      color: PURPLE, 
+      yAxisId: "ecValue", 
+      domain: [0, 10000],
+      stroke: "#8b5cf6",
+      label: "EC (μS/cm)"
+    },
+    turbidity: { 
+      name: "Turbidity", 
+      unit: "NTU", 
+      color: ORANGE, 
+      yAxisId: "turbidity", 
+      domain: [0, 100],
+      stroke: "#f97316",
+      label: "Turbidity (NTU)"
+    }
   };
 
   // ---- Handlers
   const handleRangeChange = (e) => setRange(e.target.value);
+  
+  const handleParameterChange = (parameter) => {
+    setSelectedParameters(prev => ({
+      ...prev,
+      [parameter]: !prev[parameter]
+    }));
+  };
+
+  const handleSelectAll = () => {
+    setSelectedParameters({
+      phLevel: true,
+      tds: true,
+      salinity: true,
+      ecValue: true,
+      turbidity: true
+    });
+  };
+
+  const handleClearAll = () => {
+    setSelectedParameters({
+      phLevel: false,
+      tds: false,
+      salinity: false,
+      ecValue: false,
+      turbidity: false
+    });
+  };
 
   // ---- Data fetching
   const fetchData = async () => {
@@ -172,7 +268,7 @@ function WaterQualityChart() {
         {/* Header */}
         <div style={styles.headerCard}>
           <div style={styles.titleStack}>
-            <h3 style={styles.title}>Water Quality (TDS & pH)</h3>
+            <h3 style={styles.title}>Water Quality (pH, TDS, Salinity, EC, Turbidity)</h3>
             <div style={styles.subtitle}>
               Tank: <strong>{tankId}</strong>
               <span style={styles.pill}>Live (5s refresh)</span>
@@ -193,10 +289,91 @@ function WaterQualityChart() {
           </div>
         </div>
 
+        {/* Parameter Selector */}
+        <div style={styles.card}>
+          <div style={styles.header}>
+            <h3 style={styles.title}>Select Parameters to Display</h3>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={handleSelectAll}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(16,185,129,0.3)",
+                  background: "rgba(16,185,129,0.1)",
+                  color: "#10b981",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600"
+                }}
+              >
+                Select All
+              </button>
+              <button
+                onClick={handleClearAll}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(148,163,184,0.3)",
+                  background: "rgba(148,163,184,0.1)",
+                  color: "#9aa3b2",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600"
+                }}
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+          <div style={styles.body}>
+            <div style={{ 
+              display: "flex", 
+              flexWrap: "wrap", 
+              gap: "12px", 
+              alignItems: "center" 
+            }}>
+              {Object.entries(parameterConfig).map(([key, config]) => (
+                <label 
+                  key={key}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: selectedParameters[key] 
+                      ? `rgba(${config.color.replace('#', '').match(/.{2}/g).map(hex => parseInt(hex, 16)).join(', ')}, 0.1)` 
+                      : "rgba(148,163,184,0.1)",
+                    border: `1px solid ${selectedParameters[key] ? config.color : "rgba(148,163,184,0.3)"}`,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    color: selectedParameters[key] ? config.color : "#9aa3b2"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedParameters[key]}
+                    onChange={() => handleParameterChange(key)}
+                    style={{ margin: 0 }}
+                  />
+                  <span style={{ 
+                    fontWeight: selectedParameters[key] ? "700" : "500",
+                    fontSize: "14px"
+                  }}>
+                    {config.name} {config.unit && `(${config.unit})`}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Chart Card */}
         <div style={styles.card}>
           <div style={styles.cardBody}>
-            <ResponsiveContainer width="100%" height={420}>
+            {Object.values(selectedParameters).some(selected => selected) ? (
+              <ResponsiveContainer width="100%" height={500}>
               <LineChart data={filtered}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(226,232,240,.2)" />
                 <XAxis
@@ -209,53 +386,70 @@ function WaterQualityChart() {
                     })
                   }
                 />
-                <YAxis
-                  yAxisId="left"
-                  domain={[0, 1000]}
-                  stroke="#93c5fd"
-                  label={{ value: "TDS (mg/L)", angle: -90, position: "insideLeft", fill: "#93c5fd" }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  domain={[0, 14]}
-                  stroke="#fcd19c"
-                  label={{ value: "pH", angle: 90, position: "insideRight", fill: "#fcd19c" }}
-                />
+                {Object.entries(parameterConfig).map(([key, config]) => 
+                  selectedParameters[key] && (
+                    <YAxis
+                      key={key}
+                      yAxisId={config.yAxisId}
+                      orientation={config.yAxisId === "left" ? "left" : "right"}
+                      domain={config.domain}
+                      stroke={config.stroke}
+                      label={{ 
+                        value: config.label, 
+                        angle: config.yAxisId === "left" ? -90 : 90, 
+                        position: config.yAxisId === "left" ? "insideLeft" : "insideRight", 
+                        fill: config.stroke 
+                      }}
+                    />
+                  )
+                )}
                 <Tooltip
                   contentStyle={{ background: INK, border: "1px solid rgba(255,255,255,.08)", borderRadius: 12 }}
                   labelStyle={{ color: "#e5e7eb" }}
                   itemStyle={{ color: "#e5e7eb" }}
                   labelFormatter={(value) => `Time: ${new Date(value).toLocaleString()}`}
                   formatter={(val, name, props) => {
-                    if (props.dataKey === "tds") return [val, "TDS (mg/L)"];
-                    if (props.dataKey === "phLevel") return [val, "pH Level"];
-                    return [val, name];
+                    const config = parameterConfig[props.dataKey];
+                    return config ? [val, `${config.name} ${config.unit ? `(${config.unit})` : ''}`] : [val, name];
                   }}
                 />
                 <Legend verticalAlign="top" wrapperStyle={{ color: "#e5e7eb" }} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="tds"
-                  stroke={BLUE}
-                  strokeWidth={3}
-                  name="TDS (mg/L)"
-                  dot={false}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="phLevel"
-                  stroke={AMBER}
-                  strokeWidth={3}
-                  name="pH Level"
-                  dot={false}
-                  activeDot={{ r: 6 }}
-                />
+                {Object.entries(parameterConfig).map(([key, config]) => 
+                  selectedParameters[key] && (
+                    <Line
+                      key={key}
+                      yAxisId={config.yAxisId}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={config.color}
+                      strokeWidth={3}
+                      name={`${config.name} ${config.unit ? `(${config.unit})` : ''}`}
+                      dot={false}
+                      activeDot={{ r: 6 }}
+                    />
+                  )
+                )}
               </LineChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "400px",
+                color: "#9aa3b2",
+                textAlign: "center"
+              }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>📊</div>
+                <h3 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "600" }}>
+                  No Parameters Selected
+                </h3>
+                <p style={{ margin: 0, fontSize: "14px", opacity: 0.8 }}>
+                  Please select at least one parameter to display on the chart
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -14,6 +14,18 @@ const waterQualitySchema = new Schema({
     type: Number,
     required: true,
   },
+  salinity: {
+    type: Number,
+    required: true,
+  },
+  ecValue: {
+    type: Number,
+    required: true,
+  },
+  turbidity: {
+    type: Number,
+    required: true,
+  },
   status: {
     type: String,
     required: true,
