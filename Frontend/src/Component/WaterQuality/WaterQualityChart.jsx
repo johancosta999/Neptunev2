@@ -235,7 +235,8 @@ function WaterQualityChart() {
   const filterByRange = (data) => {
     const now = new Date();
     let from;
-    if (range === "1h") from = now - 60 * 60 * 1000;
+    if (range === "1m") from = now - 60 * 1000; // 1 minute
+    else if (range === "1h") from = now - 60 * 60 * 1000;
     else if (range === "1d") from = now - 24 * 60 * 60 * 1000;
     else from = now - 7 * 24 * 60 * 60 * 1000; // 1w
     return data.filter((d) => new Date(d.timestamp) >= from);
@@ -282,6 +283,7 @@ function WaterQualityChart() {
               onChange={handleRangeChange}
               style={styles.select}
             >
+              <option value="1m">Last Minute</option>
               <option value="1h">Last Hour</option>
               <option value="1d">Last Day</option>
               <option value="1w">Last Week</option>

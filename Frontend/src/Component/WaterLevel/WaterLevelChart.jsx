@@ -42,7 +42,8 @@ function WaterLevelChart({ records = [] }) {
     const now = new Date();
     let rangeTime;
 
-    if (range === "1h") rangeTime = now - 60 * 60 * 1000;
+    if (range === "1m") rangeTime = now - 60 * 1000; // 1 minute
+    else if (range === "1h") rangeTime = now - 60 * 60 * 1000;
     else if (range === "1d") rangeTime = now - 24 * 60 * 60 * 1000;
     else if (range === "1w") rangeTime = now - 7 * 24 * 60 * 60 * 1000;
 
@@ -75,6 +76,7 @@ function WaterLevelChart({ records = [] }) {
             onChange={(e) => setRange(e.target.value)}
             className="chart-select"
           >
+            <option value="1m">Last Minute</option>
             <option value="1h">Last Hour</option>
             <option value="1d">Last Day</option>
             <option value="1w">Last Week</option>

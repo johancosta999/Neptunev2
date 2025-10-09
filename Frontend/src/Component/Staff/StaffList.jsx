@@ -372,6 +372,7 @@ export default function Staff() {
                   },
                 }}
               >
+                <TableCell>Staff ID</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone</TableCell>
@@ -406,6 +407,9 @@ export default function Staff() {
                       },
                     }}
                   >
+                    <TableCell sx={{ color: TEXT.dim, fontFamily: "monospace", fontSize: "0.875rem" }}>
+                      {staff.id || staff._id || "—"}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>{staff.name || "—"}</TableCell>
                     <TableCell sx={{ color: TEXT.dim }}>{staff.email || "—"}</TableCell>
                     <TableCell sx={{ color: TEXT.dim }}>{staff.phone || "—"}</TableCell>
@@ -472,7 +476,7 @@ export default function Staff() {
 
               {!loading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: "#94a3b8" }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: "#94a3b8" }}>
                     No staff found.
                   </TableCell>
                 </TableRow>

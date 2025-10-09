@@ -187,7 +187,11 @@ function WaterQualityList() {
       const res = await axios.get(
         `http://localhost:5000/api/waterquality?tankId=${tankId}`
       );
-      setRecords(res.data.data || []);
+      // Sort records by timestamp descending (newest first) when fetching
+      const sortedRecords = (res.data.data || []).sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      setRecords(sortedRecords);
     } catch (err) {
       console.error(err);
     }
@@ -309,8 +313,10 @@ function WaterQualityList() {
     return startOk && endOk;
   });
 
-  // Latest first
-  const filteredRecords = records.filter((rec) => isWithinRange(rec.timestamp)).reverse();
+  // Latest first - sort by timestamp descending (newest first)
+  const filteredRecords = records
+    .filter((rec) => isWithinRange(rec.timestamp))
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   // Pagination
   useEffect(() => setCurrentPage(1), [startDateTime, endDateTime, showTable, records.length]);

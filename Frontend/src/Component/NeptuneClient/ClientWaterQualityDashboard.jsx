@@ -32,7 +32,11 @@ function ClientWaterQualityDashboard() {
         const res = await axios.get(
           `http://localhost:5000/api/waterquality?tankId=${tankId}`
         );
-        setRecords(res.data.data || []);
+        // Sort records by timestamp descending (newest first) when fetching
+        const sortedRecords = (res.data.data || []).sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setRecords(sortedRecords);
       } catch (err) {
         setRecords([]);
       } finally {
@@ -615,7 +619,7 @@ function ClientWaterQualityDashboard() {
                     </tr>
                   ) : records.length > 0 ? (
                     [...records]
-                      .reverse()
+                      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                       .slice(0, 10)
                       .map((rec, idx) => (
                         <tr key={rec._id || idx}>
