@@ -22,8 +22,11 @@ function CheckAuth({ children }) {
   const isAdminAuthenticated = () => {
     try {
       const adminData = localStorage.getItem("admin");
-      return adminData && JSON.parse(adminData);
-    } catch {
+      const parsed = adminData ? JSON.parse(adminData) : null;
+      console.log("Admin auth check:", { adminData, parsed });
+      return parsed;
+    } catch (error) {
+      console.log("Admin auth error:", error);
       return false;
     }
   };
@@ -31,8 +34,11 @@ function CheckAuth({ children }) {
   const isSellerAuthenticated = () => {
     try {
       const sellerData = localStorage.getItem("sellerStaff");
-      return sellerData && JSON.parse(sellerData);
-    } catch {
+      const parsed = sellerData ? JSON.parse(sellerData) : null;
+      console.log("Seller auth check:", { sellerData, parsed });
+      return parsed;
+    } catch (error) {
+      console.log("Seller auth error:", error);
       return false;
     }
   };
@@ -41,8 +47,11 @@ function CheckAuth({ children }) {
     try {
       const tankId = localStorage.getItem("tankId");
       const loggedTank = localStorage.getItem("loggedTank");
-      return tankId && loggedTank && JSON.parse(loggedTank);
-    } catch {
+      const parsed = loggedTank ? JSON.parse(loggedTank) : null;
+      console.log("Client auth check:", { tankId, loggedTank, parsed });
+      return tankId && parsed;
+    } catch (error) {
+      console.log("Client auth error:", error);
       return false;
     }
   };
@@ -65,18 +74,28 @@ function CheckAuth({ children }) {
   };
 
   const isAuthenticated = () => {
-    return isAdminAuthenticated() || isSellerAuthenticated() || isClientAuthenticated();
+    const auth = isAdminAuthenticated() || isSellerAuthenticated() || isClientAuthenticated();
+    console.log("Overall auth check:", auth);
+    return auth;
   };
 
   const currentUser = getCurrentUser();
   const authenticated = isAuthenticated();
 
-  console.log("Auth Check:", {
-    path: location.pathname,
-    authenticated,
-    role: currentUser?.role,
-    user: currentUser?.data?.id || currentUser?.tankId
-  });
+  console.log("=== AUTH CHECK DEBUG ===");
+  console.log("Path:", location.pathname);
+  console.log("Authenticated:", authenticated);
+  console.log("Current User:", currentUser);
+  console.log("localStorage admin:", localStorage.getItem("admin"));
+  console.log("localStorage sellerStaff:", localStorage.getItem("sellerStaff"));
+  console.log("localStorage tankId:", localStorage.getItem("tankId"));
+  console.log("localStorage loggedTank:", localStorage.getItem("loggedTank"));
+  console.log("=========================");
+
+  // Show alert for debugging
+  if (location.pathname === "/sellers") {
+    alert(`Trying to access /sellers\nAuthenticated: ${authenticated}\nUser: ${currentUser?.role || 'none'}\nAdmin data: ${localStorage.getItem("admin") || 'none'}`);
+  }
 
   // Admin-only routes
   const adminRoutes = [
@@ -132,8 +151,10 @@ function CheckAuth({ children }) {
   // Handle root path redirects
   if (location.pathname === "/") {
     if (!authenticated) {
+      console.log("Root path: Not authenticated, redirecting to login");
       return <Navigate to="/login" replace />;
     } else {
+      console.log("Root path: Authenticated, redirecting based on role:", currentUser.role);
       // Redirect based on user role
       switch (currentUser.role) {
         case "admin":
@@ -151,6 +172,7 @@ function CheckAuth({ children }) {
   // Handle login/register page redirects
   if (location.pathname === "/login" || location.pathname === "/regi") {
     if (authenticated) {
+      console.log("Login/Register: Already authenticated, redirecting based on role:", currentUser.role);
       // Redirect authenticated users away from login/register
       switch (currentUser.role) {
         case "admin":
@@ -163,32 +185,43 @@ function CheckAuth({ children }) {
           return <Navigate to="/" replace />;
       }
     }
+    console.log("Login/Register: Not authenticated, allowing access");
     // Allow access to login/register for unauthenticated users
     return <>{children}</>;
   }
 
   // Check if user is authenticated for protected routes
   if (!authenticated) {
+    console.log("Protected route: Not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
+  console.log("Protected route: Authenticated, checking role permissions");
+
   // Role-based access control
   if (currentUser.role === "admin") {
+    console.log("Admin user: Checking route permissions");
     // Admin can access admin routes and most other routes
     if (routeMatches(location.pathname, sellerRoutes)) {
+      console.log("Admin trying to access seller route, redirecting to admin dashboard");
       return <Navigate to="/admin/dashboard" replace />;
     }
   } else if (currentUser.role === "seller") {
+    console.log("Seller user: Checking route permissions");
     // Seller can only access seller routes and some general routes
     if (routeMatches(location.pathname, adminRoutes)) {
+      console.log("Seller trying to access admin route, redirecting to login");
       return <Navigate to="/login" replace />;
     }
     if (routeMatches(location.pathname, clientRoutes)) {
+      console.log("Seller trying to access client route, redirecting to seller dashboard");
       return <Navigate to="/seller/dashboard" replace />;
     }
   } else if (currentUser.role === "client") {
+    console.log("Client user: Checking route permissions");
     // Client can only access client routes and tank-specific routes for their tank
     if (routeMatches(location.pathname, adminRoutes) || routeMatches(location.pathname, sellerRoutes)) {
+      console.log("Client trying to access admin/seller route, redirecting to login");
       return <Navigate to="/login" replace />;
     }
     
@@ -201,12 +234,15 @@ function CheckAuth({ children }) {
                        location.pathname.match(/\/issues\/([^/]+)/)?.[1] ||
                        location.pathname.match(/\/invoice\/([^/]+)/)?.[1];
       
+      console.log("Tank-specific route check:", { pathTankId, userTankId: currentUser.tankId });
       if (pathTankId && pathTankId !== currentUser.tankId) {
+        console.log("Client trying to access wrong tank, redirecting to login");
         return <Navigate to="/login" replace />;
       }
     }
   }
 
+  console.log("All checks passed, rendering protected component");
   // If all checks pass, render the protected component
   return <>{children}</>;
 }

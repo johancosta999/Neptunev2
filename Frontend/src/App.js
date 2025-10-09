@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from "react-router-dom"; // added Navigate
 import LandingPage from "./Component/Pages/LandingPage";
 import CheckAuth from "./Component/Auth/CheckAuth";
 import UnauthorizedPage from "./Component/Pages/UnauthorizedPage";
+import AuthTestPage from "./Component/Pages/AuthTestPage";
 
 import WaterQualityList from "../src/Component/WaterQuality/WaterQualityList";
 import AddWaterQuality from "../src/Component/WaterQuality/AddWaterQuality";
@@ -64,6 +65,7 @@ function App() {
 
         <Route path="/" element={<LandingPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/auth-test" element={<AuthTestPage />} />
 
         <Route path="/staffs" element={
           <CheckAuth>
