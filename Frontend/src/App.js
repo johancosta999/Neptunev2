@@ -3,6 +3,8 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom"; // added Navigate
 //
 import LandingPage from "./Component/Pages/LandingPage";
+import CheckAuth from "./Component/Auth/CheckAuth";
+import UnauthorizedPage from "./Component/Pages/UnauthorizedPage";
 
 import WaterQualityList from "../src/Component/WaterQuality/WaterQualityList";
 import AddWaterQuality from "../src/Component/WaterQuality/AddWaterQuality";
@@ -61,62 +63,211 @@ function App() {
       <Routes>
 
         <Route path="/" element={<LandingPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        <Route path="/staffs" element={<StaffList />} />
-        <Route path="/staffs/add" element={<AddStaff />} />
-        <Route path="/staffs/edit/:id" element={<EditStaff />} />
+        <Route path="/staffs" element={
+          <CheckAuth>
+            <StaffList />
+          </CheckAuth>
+        } />
+        <Route path="/staffs/add" element={
+          <CheckAuth>
+            <AddStaff />
+          </CheckAuth>
+        } />
+        <Route path="/staffs/edit/:id" element={
+          <CheckAuth>
+            <EditStaff />
+          </CheckAuth>
+        } />
 
-        <Route path="/adduser" element={<AddUser />} />
-        <Route path="/userdetails" element={<UserDetails />} />
+        <Route path="/adduser" element={
+          <CheckAuth>
+            <AddUser />
+          </CheckAuth>
+        } />
+        <Route path="/userdetails" element={
+          <CheckAuth>
+            <UserDetails />
+          </CheckAuth>
+        } />
         <Route path="/regi" element={<Register />} />
-        <Route path="/userdetails/:id" element={<UpdateUser />} />
+        <Route path="/userdetails/:id" element={
+          <CheckAuth>
+            <UpdateUser />
+          </CheckAuth>
+        } />
         
         {/* <Route path="/issue" element={<Navigate to="/issues" replace />} /> */}
-        <Route path="/issues/:tankId" element={<IssueList />} />
-        <Route path="/issues/new" element={<IssueForm />} />
+        <Route path="/issues/:tankId" element={
+          <CheckAuth>
+            <IssueList />
+          </CheckAuth>
+        } />
+        <Route path="/issues/new" element={
+          <CheckAuth>
+            <IssueForm />
+          </CheckAuth>
+        } />
         
-        <Route path="/admin/issues/:tankId" element={<IssueListAdmin />} />
-        <Route path="/invoice/:tankId" element={<Invoice />} />""
+        <Route path="/admin/issues/:tankId" element={
+          <CheckAuth>
+            <IssueListAdmin />
+          </CheckAuth>
+        } />
+        <Route path="/invoice/:tankId" element={
+          <CheckAuth>
+            <Invoice />
+          </CheckAuth>
+        } />
 
              
 
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/statistics" element={<AdminStatistics />} />
-        <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/stock" element={<AdminStock />} />
-        <Route path="/admin/offers" element={<AdminOffers />} />
+        <Route path="/admin/dashboard" element={
+          <CheckAuth>
+            <AdminDashboard />
+          </CheckAuth>
+        } />
+        <Route path="/admin/orders" element={
+          <CheckAuth>
+            <AdminOrders />
+          </CheckAuth>
+        } />
+        <Route path="/admin/statistics" element={
+          <CheckAuth>
+            <AdminStatistics />
+          </CheckAuth>
+        } />
+        <Route path="/admin/products" element={
+          <CheckAuth>
+            <AdminProducts />
+          </CheckAuth>
+        } />
+        <Route path="/admin/stock" element={
+          <CheckAuth>
+            <AdminStock />
+          </CheckAuth>
+        } />
+        <Route path="/admin/offers" element={
+          <CheckAuth>
+            <AdminOffers />
+          </CheckAuth>
+        } />
 
-        <Route path="/tanks" element={<Tanks />} />
-        <Route path="/tank/:tankId/dashboard" element={<TankDashboard />} />
+        <Route path="/tanks" element={
+          <CheckAuth>
+            <Tanks />
+          </CheckAuth>
+        } />
+        <Route path="/tank/:tankId/dashboard" element={
+          <CheckAuth>
+            <TankDashboard />
+          </CheckAuth>
+        } />
 
-        <Route path="/water-quality" element={<WaterQualityList />} />
-        <Route path="/water-quality/add/:tankId" element={<AddWaterQuality />} />
-        <Route path="/water-quality/edit/:id" element={<EditWaterQuality />} />
-        <Route path="/tank/:tankId/water-quality" element={<WaterQualityList />} />
-        <Route path="/client/water-quality" element={<ClientWaterQuality />} />
+        <Route path="/water-quality" element={
+          <CheckAuth>
+            <WaterQualityList />
+          </CheckAuth>
+        } />
+        <Route path="/water-quality/add/:tankId" element={
+          <CheckAuth>
+            <AddWaterQuality />
+          </CheckAuth>
+        } />
+        <Route path="/water-quality/edit/:id" element={
+          <CheckAuth>
+            <EditWaterQuality />
+          </CheckAuth>
+        } />
+        <Route path="/tank/:tankId/water-quality" element={
+          <CheckAuth>
+            <WaterQualityList />
+          </CheckAuth>
+        } />
+        <Route path="/client/water-quality" element={
+          <CheckAuth>
+            <ClientWaterQuality />
+          </CheckAuth>
+        } />
 
-        <Route path="/water-level/add/:tankId" element={<AddWaterLevel />} />
-        <Route path="/water-level/edit/:id" element={<EditWaterlevel />} />
-        <Route path="/tank/:tankId/tank-level" element={<Waterlevellist/>} />
-        <Route path="/client/water-level" element={<ClientWaterLevel />} />
+        <Route path="/water-level/add/:tankId" element={
+          <CheckAuth>
+            <AddWaterLevel />
+          </CheckAuth>
+        } />
+        <Route path="/water-level/edit/:id" element={
+          <CheckAuth>
+            <EditWaterlevel />
+          </CheckAuth>
+        } />
+        <Route path="/tank/:tankId/tank-level" element={
+          <CheckAuth>
+            <Waterlevellist/>
+          </CheckAuth>
+        } />
+        <Route path="/client/water-level" element={
+          <CheckAuth>
+            <ClientWaterLevel />
+          </CheckAuth>
+        } />
 
-        <Route path="/sellers" element={<Tanks/ >} />
-        <Route path="/add-tank" element={<AddTank/ >} />
-        <Route path="/seller/dashboard" element={<SellerDashboard />} />
+        <Route path="/sellers" element={
+          <CheckAuth>
+            <Tanks />
+          </CheckAuth>
+        } />
+        <Route path="/add-tank" element={
+          <CheckAuth>
+            <AddTank />
+          </CheckAuth>
+        } />
+        <Route path="/seller/dashboard" element={
+          <CheckAuth>
+            <SellerDashboard />
+          </CheckAuth>
+        } />
 
-        <Route path="/home" element={<Home />} />
-        <Route path="/users" element={<Users />} />
+        <Route path="/home" element={
+          <CheckAuth>
+            <Home />
+          </CheckAuth>
+        } />
+        <Route path="/users" element={
+          <CheckAuth>
+            <Users />
+          </CheckAuth>
+        } />
         
 
-        <Route path="/tank/:tankId/billing" element={<BillingDashboard />} />
-        <Route path="/client/billing" element={<ClientBill />} />
+        <Route path="/tank/:tankId/billing" element={
+          <CheckAuth>
+            <BillingDashboard />
+          </CheckAuth>
+        } />
+        <Route path="/client/billing" element={
+          <CheckAuth>
+            <ClientBill />
+          </CheckAuth>
+        } />
 
-        <Route path="/water-level-chart/:tankId" element={<WaterLevelChart />} />
-        <Route path="/water-quality-chart/:tankId" element={<WaterQualityChart />} />
+        <Route path="/water-level-chart/:tankId" element={
+          <CheckAuth>
+            <WaterLevelChart />
+          </CheckAuth>
+        } />
+        <Route path="/water-quality-chart/:tankId" element={
+          <CheckAuth>
+            <WaterQualityChart />
+          </CheckAuth>
+        } />
         
-        <Route path="/homepage" element={<Homepage />} />
+        <Route path="/homepage" element={
+          <CheckAuth>
+            <Homepage />
+          </CheckAuth>
+        } />
       </Routes>
     </div>
   );
