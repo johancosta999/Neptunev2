@@ -21,8 +21,6 @@ function ClientWaterQualityDashboard() {
   const [selectedParameters, setSelectedParameters] = useState({
     phLevel: true,
     tds: true,
-    salinity: false,
-    ecValue: false,
     turbidity: false
   });
 
@@ -69,14 +67,6 @@ function ClientWaterQualityDashboard() {
     records.length > 0
       ? (records.reduce((s, r) => s + (r.tds || 0), 0) / records.length).toFixed(2)
       : "--";
-  const avgSalinity =
-    records.length > 0
-      ? (records.reduce((s, r) => s + (r.salinity || 0), 0) / records.length).toFixed(2)
-      : "--";
-  const avgEcValue =
-    records.length > 0
-      ? (records.reduce((s, r) => s + (r.ecValue || 0), 0) / records.length).toFixed(2)
-      : "--";
   const avgTurbidity =
     records.length > 0
       ? (records.reduce((s, r) => s + (r.turbidity || 0), 0) / records.length).toFixed(2)
@@ -103,22 +93,6 @@ function ClientWaterQualityDashboard() {
       domain: [0, 1000],
       icon: "💧"
     },
-    salinity: { 
-      name: "Salinity", 
-      unit: "ppt", 
-      color: "#10b981", 
-      yAxisId: "salinity", 
-      domain: [0, 100],
-      icon: "🧂"
-    },
-    ecValue: { 
-      name: "EC Value", 
-      unit: "μS/cm", 
-      color: "#8b5cf6", 
-      yAxisId: "ecValue", 
-      domain: [0, 10000],
-      icon: "⚡"
-    },
     turbidity: { 
       name: "Turbidity", 
       unit: "NTU", 
@@ -141,8 +115,6 @@ function ClientWaterQualityDashboard() {
     setSelectedParameters({
       phLevel: true,
       tds: true,
-      salinity: true,
-      ecValue: true,
       turbidity: true
     });
   };
@@ -151,8 +123,6 @@ function ClientWaterQualityDashboard() {
     setSelectedParameters({
       phLevel: false,
       tds: false,
-      salinity: false,
-      ecValue: false,
       turbidity: false
     });
   };
@@ -348,16 +318,6 @@ function ClientWaterQualityDashboard() {
             <div style={{ color: "#a9c4e0" }}>Avg. TDS</div>
           </div>
           <div style={S.mcard}>
-            <div style={S.micon}>🧂</div>
-            <div style={{ fontWeight: 900, fontSize: 20 }}>{avgSalinity}</div>
-            <div style={{ color: "#a9c4e0" }}>Avg. Salinity</div>
-          </div>
-          <div style={S.mcard}>
-            <div style={S.micon}>⚡</div>
-            <div style={{ fontWeight: 900, fontSize: 20 }}>{avgEcValue}</div>
-            <div style={{ color: "#a9c4e0" }}>Avg. EC Value</div>
-          </div>
-          <div style={S.mcard}>
             <div style={S.micon}>🌊</div>
             <div style={{ fontWeight: 900, fontSize: 20 }}>{avgTurbidity}</div>
             <div style={{ color: "#a9c4e0" }}>Avg. Turbidity</div>
@@ -493,14 +453,6 @@ function ClientWaterQualityDashboard() {
                       <stop offset="0%" stopColor="#a78bfa" />
                       <stop offset="100%" stopColor="#60a5fa" />
                     </linearGradient>
-                    <linearGradient id="salinityGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                    <linearGradient id="ecValueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" />
-                      <stop offset="100%" stopColor="#7c3aed" />
-                    </linearGradient>
                     <linearGradient id="turbidityGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#f97316" />
                       <stop offset="100%" stopColor="#ea580c" />
@@ -604,8 +556,6 @@ function ClientWaterQualityDashboard() {
                     <th style={S.th}>Date/Time</th>
                     <th style={S.th}>pH</th>
                     <th style={S.th}>TDS</th>
-                    <th style={S.th}>Salinity</th>
-                    <th style={S.th}>EC Value</th>
                     <th style={S.th}>Turbidity</th>
                     <th style={S.th}>Status</th>
                   </tr>
@@ -613,7 +563,7 @@ function ClientWaterQualityDashboard() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td style={S.td} colSpan="7">
+                      <td style={S.td} colSpan="5">
                         Loading...
                       </td>
                     </tr>
@@ -628,8 +578,6 @@ function ClientWaterQualityDashboard() {
                           </td>
                           <td style={S.td}>{rec.phLevel}</td>
                           <td style={S.td}>{rec.tds}</td>
-                          <td style={S.td}>{rec.salinity || 'N/A'} ppt</td>
-                          <td style={S.td}>{rec.ecValue || 'N/A'} μS/cm</td>
                           <td style={S.td}>{rec.turbidity || 'N/A'} NTU</td>
                           <td
                             style={{
@@ -647,7 +595,7 @@ function ClientWaterQualityDashboard() {
                       ))
                   ) : (
                     <tr>
-                      <td style={S.td} colSpan="7">
+                      <td style={S.td} colSpan="5">
                         No data available.
                       </td>
                     </tr>
@@ -673,8 +621,6 @@ function ClientWaterQualityDashboard() {
           <div style={{ fontSize: 13, lineHeight: 1.6 }}>
             <div><strong>pH:</strong> Should be between 6.5 and 8.5 for safe water</div>
             <div><strong>TDS:</strong> Total Dissolved Solids below 500 mg/L is considered good</div>
-            <div><strong>Salinity:</strong> Fresh water (&lt;0.5 ppt), Brackish (0.5-35 ppt), Brine (&gt;35 ppt)</div>
-            <div><strong>EC Value:</strong> Electrical Conductivity - Low (&lt;100 μS/cm), Normal (100-2000 μS/cm), High (&gt;2000 μS/cm)</div>
             <div><strong>Turbidity:</strong> Water clarity - Clear (&lt;1 NTU), Slightly cloudy (1-10 NTU), Turbid (&gt;10 NTU)</div>
             <div style={{ marginTop: 8, fontWeight: 700 }}>
               If status shows "Unsafe", please take action or contact support.

@@ -17,6 +17,7 @@ function WaterQualityList() {
   const [endDateTime, setEndDateTime] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const [generatingSummaryPDF, setGeneratingSummaryPDF] = useState(false);
 
   // ---------- Inline styles (no external CSS) ----------
   const styles = {
@@ -253,6 +254,204 @@ function WaterQualityList() {
     pdf.save(`WaterQuality_Report_Tank_${tankId}.pdf`);
   };
 
+  const handleGenerateSummaryPDF = async () => {
+    setGeneratingSummaryPDF(true);
+    
+    try {
+      // Create a temporary container for PDF generation
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.position = 'absolute';
+      pdfContainer.style.left = '-9999px';
+      pdfContainer.style.top = '-9999px';
+      pdfContainer.style.width = '1200px';
+      pdfContainer.style.backgroundColor = '#ffffff';
+      pdfContainer.style.padding = '0';
+      pdfContainer.style.fontFamily = 'Arial, sans-serif';
+      pdfContainer.style.lineHeight = '1.4';
+      
+      // Create professional header with company branding
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          padding: 30px 40px;
+          margin-bottom: 0;
+          border-radius: 0;
+          box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px;">NEPTUNE</h1>
+              <h2 style="margin: 5px 0 0 0; font-size: 18px; font-weight: 300; opacity: 0.9;">Water Quality Management System</h2>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; opacity: 0.9;">Weekly Summary Report</div>
+              <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="
+          background: #f8fafc;
+          padding: 25px 40px;
+          border-bottom: 3px solid #3b82f6;
+          margin-bottom: 30px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700;">Weekly Water Quality Summary</h3>
+              <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">Tank ID: ${tankId} | Daily averages and status overview</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 16px;">
+                ${filteredSummary.length} Days
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      pdfContainer.appendChild(header);
+
+      // Create summary table
+      const tableWrapper = document.createElement('div');
+      tableWrapper.style.cssText = `
+        margin: 0 40px 40px 40px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+      `;
+
+      const table = document.createElement('table');
+      table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        color: #1e293b;
+        margin: 0;
+      `;
+
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr style="background: linear-gradient(135deg, #1e293b, #334155);">
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Date</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Avg pH</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Avg TDS (mg/L)</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Avg Turbidity (NTU)</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #3b82f6;">Most Common Status</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      // Create table body
+      const tbody = document.createElement('tbody');
+      filteredSummary.forEach((row, index) => {
+        const isEven = index % 2 === 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; font-weight: 600;">${row.date}</td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">${row.avgPH}</td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">${row.avgTDS}</td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">${row.avgTurbidity}</td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">
+            <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; background: ${row.frequentStatus === 'Safe' ? '#d1fae5' : '#fef3c7'}; color: ${row.frequentStatus === 'Safe' ? '#065f46' : '#92400e'}; border: 1px solid ${row.frequentStatus === 'Safe' ? '#10b981' : '#f59e0b'};">
+              ${row.frequentStatus}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Add empty state if no data
+      if (filteredSummary.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="5" style="padding: 32px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc;">
+            No summary data available for the selected date range.
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+      tableWrapper.appendChild(table);
+      pdfContainer.appendChild(tableWrapper);
+
+      // Add professional footer
+      const footer = document.createElement('div');
+      footer.innerHTML = `
+        <div style="
+          background: #1e293b;
+          color: white;
+          padding: 20px 40px;
+          margin-top: 30px;
+          text-align: center;
+          font-size: 12px;
+        ">
+          <div style="margin-bottom: 8px; font-weight: 600;">Neptune Water Quality Management System</div>
+          <div style="opacity: 0.8;">Generated on ${new Date().toLocaleString()} | Tank ID: ${tankId} | Confidential Document</div>
+        </div>
+      `;
+      pdfContainer.appendChild(footer);
+
+      document.body.appendChild(pdfContainer);
+
+      // Generate PDF with higher quality
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        height: pdfContainer.scrollHeight,
+        logging: false,
+        allowTaint: true
+      });
+
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Top margin
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20; // Account for margins
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      // Clean up
+      document.body.removeChild(pdfContainer);
+
+      // Download PDF with professional filename
+      const fileName = `Neptune_Weekly_Summary_Tank_${tankId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error('Error generating summary PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setGeneratingSummaryPDF(false);
+    }
+  };
+
   // ---------- Summary helpers ----------
   const getWeeklySummary = () => {
     const grouped = {};
@@ -262,16 +461,12 @@ function WaterQualityList() {
         grouped[date] = { 
           phTotal: 0, 
           tdsTotal: 0, 
-          salinityTotal: 0, 
-          ecValueTotal: 0, 
           turbidityTotal: 0, 
           count: 0, 
           statusCount: {} 
         };
       grouped[date].phTotal += rec.phLevel;
       grouped[date].tdsTotal += rec.tds;
-      grouped[date].salinityTotal += rec.salinity || 0;
-      grouped[date].ecValueTotal += rec.ecValue || 0;
       grouped[date].turbidityTotal += rec.turbidity || 0;
       grouped[date].count += 1;
       grouped[date].statusCount[rec.status] =
@@ -281,13 +476,11 @@ function WaterQualityList() {
     return Object.entries(grouped).map(([date, values]) => {
       const avgPH = (values.phTotal / values.count).toFixed(2);
       const avgTDS = (values.tdsTotal / values.count).toFixed(2);
-      const avgSalinity = (values.salinityTotal / values.count).toFixed(2);
-      const avgECValue = (values.ecValueTotal / values.count).toFixed(2);
       const avgTurbidity = (values.turbidityTotal / values.count).toFixed(2);
       const frequentStatus = Object.entries(values.statusCount).reduce((a, b) =>
         a[1] > b[1] ? a : b
       )[0];
-      return { date, avgPH, avgTDS, avgSalinity, avgECValue, avgTurbidity, frequentStatus };
+      return { date, avgPH, avgTDS, avgTurbidity, frequentStatus };
     });
   };
 
@@ -419,8 +612,6 @@ function WaterQualityList() {
                     <th style={styles.th}>Date</th>
                     <th style={styles.th}>Avg pH</th>
                     <th style={styles.th}>Avg TDS</th>
-                    <th style={styles.th}>Avg Salinity</th>
-                    <th style={styles.th}>Avg EC Value</th>
                     <th style={styles.th}>Avg Turbidity</th>
                     <th style={styles.th}>Most Common Status</th>
                   </tr>
@@ -431,15 +622,13 @@ function WaterQualityList() {
                       <td style={styles.td}>{row.date}</td>
                       <td style={styles.td}>{row.avgPH}</td>
                       <td style={styles.td}>{row.avgTDS}</td>
-                      <td style={styles.td}>{row.avgSalinity} ppt</td>
-                      <td style={styles.td}>{row.avgECValue} μS/cm</td>
                       <td style={styles.td}>{row.avgTurbidity} NTU</td>
                       <td style={styles.td}>{row.frequentStatus}</td>
                     </tr>
                   ))}
                   {filteredSummary.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={styles.td}>
+                      <td colSpan={5} style={styles.td}>
                         No summary data for selected range.
                       </td>
                     </tr>
@@ -465,8 +654,26 @@ function WaterQualityList() {
                 <button style={styles.btnSecondary}>Add New Record</button>
               </Link>
 
-              <button onClick={handleGeneratePDF} style={styles.btnSecondary}>
-                Download PDF Report
+              
+
+              <button 
+                onClick={handleGenerateSummaryPDF} 
+                disabled={generatingSummaryPDF || filteredSummary.length === 0}
+                style={{
+                  ...styles.btnSecondary,
+                  background: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "rgba(148,163,184,.1)" 
+                    : "rgba(59,130,246,.1)",
+                  border: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "1px solid rgba(148,163,184,.3)" 
+                    : "1px solid rgba(59,130,246,.3)",
+                  color: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "#9aa3b2" 
+                    : "#3b82f6",
+                  opacity: generatingSummaryPDF || filteredSummary.length === 0 ? 0.7 : 1
+                }}
+              >
+                {generatingSummaryPDF ? "Generating..." : "📊 Download Weekly Summary"}
               </button>
 
               <button 
@@ -498,8 +705,6 @@ function WaterQualityList() {
                       <th style={styles.th}>Timestamp</th>
                       <th style={styles.th}>pH Level</th>
                       <th style={styles.th}>TDS</th>
-                      <th style={styles.th}>Salinity</th>
-                      <th style={styles.th}>EC Value</th>
                       <th style={styles.th}>Turbidity</th>
                       <th style={styles.th}>Status</th>
                       <th style={styles.th}>Actions</th>
@@ -513,8 +718,6 @@ function WaterQualityList() {
                         </td>
                         <td style={styles.td}>{rec.phLevel}</td>
                         <td style={styles.td}>{rec.tds}</td>
-                        <td style={styles.td}>{rec.salinity || 'N/A'} ppt</td>
-                        <td style={styles.td}>{rec.ecValue || 'N/A'} μS/cm</td>
                         <td style={styles.td}>{rec.turbidity || 'N/A'} NTU</td>
                         <td style={styles.td}>{rec.status}</td>
                         <td style={styles.td}>
@@ -544,7 +747,7 @@ function WaterQualityList() {
                     ))}
                     {pageItems.length === 0 && (
                       <tr>
-                        <td colSpan={8} style={styles.td}>
+                        <td colSpan={6} style={styles.td}>
                           No records for selected range.
                         </td>
                       </tr>

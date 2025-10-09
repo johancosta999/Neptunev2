@@ -78,7 +78,7 @@ setInterval(fetchTankIds, 1 * 60 * 1000);
 setInterval(async () => {
   for (const tankId of tankIds) {
     // Skip physical tank - it will have real sensor data
-    if (tankId === 'TNK-20250930-Z592') {
+    if (tankId === 'TNK-20251009-KL7J') {
       console.log(`⏭️ Skipping auto-generation for physical tank: ${tankId}`);
       continue;
     }
@@ -144,7 +144,7 @@ setInterval(async () => {
 async function generateWaterLevels() {
   for (const tankId of tankIds) {
     // Skip physical tank - it will have real sensor data
-    if (tankId === 'TNK-20250930-Z592') {
+    if (tankId === 'TNK-20251009-KL7J') {
       console.log(`⏭️ Skipping auto-generation for physical tank: ${tankId}`);
       continue;
     }

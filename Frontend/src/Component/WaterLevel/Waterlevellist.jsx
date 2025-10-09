@@ -17,6 +17,7 @@ function WaterLevelList() {
   const [deletingAll, setDeletingAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const [generatingSummaryPDF, setGeneratingSummaryPDF] = useState(false);
 
   // ---------- Inline styles (no external CSS) ----------
   const styles = {
@@ -255,6 +256,210 @@ function WaterLevelList() {
     pdf.save(`WaterLevel_Report_Tank_${tankId}.pdf`);
   };
 
+  const handleGenerateSummaryPDF = async () => {
+    setGeneratingSummaryPDF(true);
+    
+    try {
+      // Create a temporary container for PDF generation
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.position = 'absolute';
+      pdfContainer.style.left = '-9999px';
+      pdfContainer.style.top = '-9999px';
+      pdfContainer.style.width = '1200px';
+      pdfContainer.style.backgroundColor = '#ffffff';
+      pdfContainer.style.padding = '0';
+      pdfContainer.style.fontFamily = 'Arial, sans-serif';
+      pdfContainer.style.lineHeight = '1.4';
+      
+      // Create professional header with company branding
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          padding: 30px 40px;
+          margin-bottom: 0;
+          border-radius: 0;
+          box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px;">NEPTUNE</h1>
+              <h2 style="margin: 5px 0 0 0; font-size: 18px; font-weight: 300; opacity: 0.9;">Water Level Management System</h2>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; opacity: 0.9;">Weekly Summary Report</div>
+              <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="
+          background: #f0fdf4;
+          padding: 25px 40px;
+          border-bottom: 3px solid #10b981;
+          margin-bottom: 30px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700;">Weekly Water Level Summary</h3>
+              <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">Tank ID: ${tankId} | Daily averages and refill cycles</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 16px;">
+                ${filteredSummary.length} Days
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      pdfContainer.appendChild(header);
+
+      // Create summary table
+      const tableWrapper = document.createElement('div');
+      tableWrapper.style.cssText = `
+        margin: 0 40px 40px 40px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+      `;
+
+      const table = document.createElement('table');
+      table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        color: #1e293b;
+        margin: 0;
+      `;
+
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr style="background: linear-gradient(135deg, #1e293b, #334155);">
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #10b981;">Date</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #10b981;">Average Water Level (%)</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #10b981;">Refill Cycles</th>
+          <th style="padding: 16px 12px; color: #ffffff; font-weight: 700; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #10b981;">Most Common Status</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      // Create table body
+      const tbody = document.createElement('tbody');
+      filteredSummary.forEach((row, index) => {
+        const isEven = index % 2 === 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; font-weight: 600;">${row.date}</td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">
+            <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; background: ${parseFloat(row.avgLevel) >= 80 ? '#d1fae5' : parseFloat(row.avgLevel) >= 50 ? '#fef3c7' : '#fee2e2'}; color: ${parseFloat(row.avgLevel) >= 80 ? '#065f46' : parseFloat(row.avgLevel) >= 50 ? '#92400e' : '#991b1b'}; border: 1px solid ${parseFloat(row.avgLevel) >= 80 ? '#10b981' : parseFloat(row.avgLevel) >= 50 ? '#f59e0b' : '#ef4444'};">
+              ${row.avgLevel}%
+            </span>
+          </td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">
+            <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; background: ${row.recycleCount > 0 ? '#dbeafe' : '#f1f5f9'}; color: ${row.recycleCount > 0 ? '#1e40af' : '#475569'}; border: 1px solid ${row.recycleCount > 0 ? '#3b82f6' : '#94a3b8'};">
+              ${row.recycleCount}
+            </span>
+          </td>
+          <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 13px; text-align: center;">
+            <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; background: ${row.frequentStatus === 'Safe' ? '#d1fae5' : '#fef3c7'}; color: ${row.frequentStatus === 'Safe' ? '#065f46' : '#92400e'}; border: 1px solid ${row.frequentStatus === 'Safe' ? '#10b981' : '#f59e0b'};">
+              ${row.frequentStatus}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Add empty state if no data
+      if (filteredSummary.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="4" style="padding: 32px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc;">
+            No summary data available for the selected date range.
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+      tableWrapper.appendChild(table);
+      pdfContainer.appendChild(tableWrapper);
+
+      // Add professional footer
+      const footer = document.createElement('div');
+      footer.innerHTML = `
+        <div style="
+          background: #1e293b;
+          color: white;
+          padding: 20px 40px;
+          margin-top: 30px;
+          text-align: center;
+          font-size: 12px;
+        ">
+          <div style="margin-bottom: 8px; font-weight: 600;">Neptune Water Level Management System</div>
+          <div style="opacity: 0.8;">Generated on ${new Date().toLocaleString()} | Tank ID: ${tankId} | Confidential Document</div>
+        </div>
+      `;
+      pdfContainer.appendChild(footer);
+
+      document.body.appendChild(pdfContainer);
+
+      // Generate PDF with higher quality
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        height: pdfContainer.scrollHeight,
+        logging: false,
+        allowTaint: true
+      });
+
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Top margin
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20; // Account for margins
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      // Clean up
+      document.body.removeChild(pdfContainer);
+
+      // Download PDF with professional filename
+      const fileName = `Neptune_WaterLevel_Summary_Tank_${tankId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error('Error generating summary PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setGeneratingSummaryPDF(false);
+    }
+  };
+
   // ---------- Summary helpers ----------
   const getWeeklySummary = () => {
     const grouped = {};
@@ -453,8 +658,26 @@ function WaterLevelList() {
                 <button style={styles.btnSecondary}>Add New Record</button>
               </Link>
 
-              <button onClick={handleGeneratePDF} style={styles.btnSecondary}>
-                Download PDF Report
+              
+
+              <button 
+                onClick={handleGenerateSummaryPDF} 
+                disabled={generatingSummaryPDF || filteredSummary.length === 0}
+                style={{
+                  ...styles.btnSecondary,
+                  background: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "rgba(148,163,184,.1)" 
+                    : "rgba(16,185,129,.1)",
+                  border: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "1px solid rgba(148,163,184,.3)" 
+                    : "1px solid rgba(16,185,129,.3)",
+                  color: generatingSummaryPDF || filteredSummary.length === 0 
+                    ? "#9aa3b2" 
+                    : "#10b981",
+                  opacity: generatingSummaryPDF || filteredSummary.length === 0 ? 0.7 : 1
+                }}
+              >
+                {generatingSummaryPDF ? "Generating..." : "📊 Download Weekly Summary"}
               </button>
             </div>
           </div>

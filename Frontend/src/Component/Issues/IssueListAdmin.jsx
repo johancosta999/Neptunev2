@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Nav from "../Nav/nav";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function IssueListAdmin() {
   const [issues, setIssues] = useState([]);
@@ -17,6 +19,7 @@ export default function IssueListAdmin() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filteredIssues, setFilteredIssues] = useState([]);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // --------- Styles (inline, no external CSS) ----------
   const styles = {
@@ -469,6 +472,211 @@ We hope everything is working perfectly now. Thank you for your patience! 🙏`;
     }
   };
 
+  const handleGeneratePDF = async () => {
+    setGeneratingPDF(true);
+    
+    try {
+      // Create a temporary container for PDF generation
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.position = 'absolute';
+      pdfContainer.style.left = '-9999px';
+      pdfContainer.style.top = '-9999px';
+      pdfContainer.style.width = '1200px';
+      pdfContainer.style.backgroundColor = '#ffffff';
+      pdfContainer.style.padding = '0';
+      pdfContainer.style.fontFamily = 'Arial, sans-serif';
+      pdfContainer.style.lineHeight = '1.4';
+      
+      // Create professional header with company branding
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+          padding: 30px 40px;
+          margin-bottom: 0;
+          border-radius: 0;
+          box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px;">NEPTUNE</h1>
+              <h2 style="margin: 5px 0 0 0; font-size: 18px; font-weight: 300; opacity: 0.9;">Issue Management System</h2>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; opacity: 0.9;">Issue Details Report</div>
+              <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="
+          background: #fef2f2;
+          padding: 25px 40px;
+          border-bottom: 3px solid #ef4444;
+          margin-bottom: 30px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700;">Issue Details Report</h3>
+              <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">Tank ID: ${tankId} | Complete issue tracking and resolution details</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 16px;">
+                ${filteredIssues.length} Issues
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      pdfContainer.appendChild(header);
+
+      // Create issues table
+      const tableWrapper = document.createElement('div');
+      tableWrapper.style.cssText = `
+        margin: 0 40px 40px 40px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+      `;
+
+      const table = document.createElement('table');
+      table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        color: #1e293b;
+        margin: 0;
+      `;
+
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr style="background: linear-gradient(135deg, #1e293b, #334155);">
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Issue Title</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Description</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Status</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Priority</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Category</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Assigned To</th>
+          <th style="padding: 12px 8px; color: #ffffff; font-weight: 700; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ef4444;">Reported Date</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      // Create table body
+      const tbody = document.createElement('tbody');
+      filteredIssues.forEach((issue, index) => {
+        const isEven = index % 2 === 0;
+        const assignedTech = techs.find((t) => t._id === issue.assignedTo);
+        const city = tankCityById[issue.tankId];
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 12px; font-weight: 600; max-width: 150px; word-wrap: break-word;">${issue.title}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; max-width: 200px; word-wrap: break-word;">${issue.description}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; text-align: center;">
+            <span style="display: inline-block; padding: 3px 6px; border-radius: 8px; font-size: 10px; font-weight: 700; background: ${issue.status === 'Resolved' ? '#d1fae5' : issue.status === 'Open' ? '#dbeafe' : '#fef3c7'}; color: ${issue.status === 'Resolved' ? '#065f46' : issue.status === 'Open' ? '#1e40af' : '#92400e'}; border: 1px solid ${issue.status === 'Resolved' ? '#10b981' : issue.status === 'Open' ? '#3b82f6' : '#f59e0b'};">
+              ${issue.status}
+            </span>
+          </td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; text-align: center;">${issue.priority}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; text-align: center;">${issue.category}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; text-align: center;">${assignedTech ? assignedTech.name : 'Unassigned'}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; background-color: ${isEven ? '#ffffff' : '#f8fafc'}; color: #1e293b; font-size: 11px; text-align: center;">${new Date(issue.createdAt).toLocaleDateString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Add empty state if no data
+      if (filteredIssues.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="7" style="padding: 32px; text-align: center; color: #64748b; font-style: italic; background: #f8fafc;">
+            No issues found for the selected criteria.
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+      tableWrapper.appendChild(table);
+      pdfContainer.appendChild(tableWrapper);
+
+      // Add professional footer
+      const footer = document.createElement('div');
+      footer.innerHTML = `
+        <div style="
+          background: #1e293b;
+          color: white;
+          padding: 20px 40px;
+          margin-top: 30px;
+          text-align: center;
+          font-size: 12px;
+        ">
+          <div style="margin-bottom: 8px; font-weight: 600;">Neptune Issue Management System</div>
+          <div style="opacity: 0.8;">Generated on ${new Date().toLocaleString()} | Tank ID: ${tankId} | Confidential Document</div>
+        </div>
+      `;
+      pdfContainer.appendChild(footer);
+
+      document.body.appendChild(pdfContainer);
+
+      // Generate PDF with higher quality
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        height: pdfContainer.scrollHeight,
+        logging: false,
+        allowTaint: true
+      });
+
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Top margin
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20; // Account for margins
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      // Clean up
+      document.body.removeChild(pdfContainer);
+
+      // Download PDF with professional filename
+      const fileName = `Neptune_Issues_Report_Tank_${tankId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   // ---------- UI ----------
   const statusStyle = (status) => {
     if (String(status).toLowerCase() === "resolved")
@@ -556,6 +764,38 @@ We hope everything is working perfectly now. Thank you for your patience! 🙏`;
                 }}
               >
                 Clear
+              </button>
+
+              <button
+                onClick={handleGeneratePDF}
+                disabled={generatingPDF || filteredIssues.length === 0}
+                style={{
+                  ...styles.filterBtn,
+                  background: generatingPDF || filteredIssues.length === 0 
+                    ? "rgba(148,163,184,.1)" 
+                    : "rgba(239,68,68,.1)",
+                  border: generatingPDF || filteredIssues.length === 0 
+                    ? "1px solid rgba(148,163,184,.3)" 
+                    : "1px solid rgba(239,68,68,.3)",
+                  color: generatingPDF || filteredIssues.length === 0 
+                    ? "#9aa3b2" 
+                    : "#ef4444",
+                  opacity: generatingPDF || filteredIssues.length === 0 ? 0.7 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!generatingPDF && filteredIssues.length > 0) {
+                    e.target.style.background = "rgba(239,68,68,.2)";
+                    e.target.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!generatingPDF && filteredIssues.length > 0) {
+                    e.target.style.background = "rgba(239,68,68,.1)";
+                    e.target.style.transform = "translateY(0)";
+                  }
+                }}
+              >
+                {generatingPDF ? "Generating..." : "📄 Download PDF Report"}
               </button>
             </div>
             

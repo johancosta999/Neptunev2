@@ -19,8 +19,6 @@ function WaterQualityChart() {
   const [selectedParameters, setSelectedParameters] = useState({
     phLevel: true,
     tds: true,
-    salinity: false,
-    ecValue: false,
     turbidity: false
   });
 
@@ -154,29 +152,11 @@ function WaterQualityChart() {
       stroke: "#93c5fd",
       label: "TDS (mg/L)"
     },
-    salinity: { 
-      name: "Salinity", 
-      unit: "ppt", 
-      color: GREEN, 
-      yAxisId: "salinity", 
-      domain: [0, 100],
-      stroke: "#10b981",
-      label: "Salinity (ppt)"
-    },
-    ecValue: { 
-      name: "EC Value", 
-      unit: "μS/cm", 
-      color: PURPLE, 
-      yAxisId: "ecValue", 
-      domain: [0, 10000],
-      stroke: "#8b5cf6",
-      label: "EC (μS/cm)"
-    },
     turbidity: { 
       name: "Turbidity", 
       unit: "NTU", 
       color: ORANGE, 
-      yAxisId: "turbidity", 
+      yAxisId: "right", 
       domain: [0, 100],
       stroke: "#f97316",
       label: "Turbidity (NTU)"
@@ -197,8 +177,6 @@ function WaterQualityChart() {
     setSelectedParameters({
       phLevel: true,
       tds: true,
-      salinity: true,
-      ecValue: true,
       turbidity: true
     });
   };
@@ -207,8 +185,6 @@ function WaterQualityChart() {
     setSelectedParameters({
       phLevel: false,
       tds: false,
-      salinity: false,
-      ecValue: false,
       turbidity: false
     });
   };
@@ -269,7 +245,7 @@ function WaterQualityChart() {
         {/* Header */}
         <div style={styles.headerCard}>
           <div style={styles.titleStack}>
-            <h3 style={styles.title}>Water Quality (pH, TDS, Salinity, EC, Turbidity)</h3>
+            <h3 style={styles.title}>Water Quality (pH, TDS, Turbidity)</h3>
             <div style={styles.subtitle}>
               Tank: <strong>{tankId}</strong>
               <span style={styles.pill}>Live (5s refresh)</span>
