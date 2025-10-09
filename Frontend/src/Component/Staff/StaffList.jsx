@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Box,
@@ -23,7 +23,10 @@ import {
   InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import AdminNav from "../Nav/adminNav";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function Staff() {
   /* ----------------------- state ----------------------- */
@@ -31,6 +34,10 @@ export default function Staff() {
   const [loading, setLoading] = useState(true);
   const [assignedTasks, setAssignedTasks] = useState({});
   const [refreshingTasks, setRefreshingTasks] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  
+  // Ref for PDF generation
+  const tableRef = useRef(null);
 
   const [open, setOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
@@ -192,6 +199,256 @@ export default function Staff() {
       .catch((err) => console.error("Delete error:", err));
   };
 
+  /* -------------------- PDF generation ------------------- */
+  const generatePDF = async () => {
+    if (!tableRef.current) {
+      console.error("Table ref not found");
+      return;
+    }
+
+    setGeneratingPDF(true);
+    
+    try {
+      // Create a temporary container for PDF generation
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.position = 'absolute';
+      pdfContainer.style.left = '-9999px';
+      pdfContainer.style.top = '-9999px';
+      pdfContainer.style.width = '1200px';
+      pdfContainer.style.backgroundColor = '#ffffff';
+      pdfContainer.style.padding = '0';
+      pdfContainer.style.fontFamily = 'Arial, sans-serif';
+      pdfContainer.style.lineHeight = '1.4';
+      
+      // Create professional header with company branding
+      const header = document.createElement('div');
+      header.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #f97316, #fb923c);
+          color: white;
+          padding: 30px 40px;
+          margin-bottom: 0;
+          border-radius: 0;
+          box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h1 style="margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px;">NEPTUNE</h1>
+              <h2 style="margin: 5px 0 0 0; font-size: 18px; font-weight: 300; opacity: 0.9;">Water Quality Management System</h2>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 14px; opacity: 0.9;">Staff Directory</div>
+              <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="
+          background: #f8fafc;
+          padding: 25px 40px;
+          border-bottom: 3px solid #f97316;
+          margin-bottom: 30px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700;">Staff List Report</h3>
+              <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">Complete directory of all staff members and their assignments</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background: #f97316; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 16px;">
+                ${filtered.length} Staff Members
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      pdfContainer.appendChild(header);
+
+      // Clone the table and modify it for PDF
+      const tableClone = tableRef.current.cloneNode(true);
+      
+      // Remove action buttons from PDF table
+      const actionCells = tableClone.querySelectorAll('td:last-child, th:last-child');
+      actionCells.forEach(cell => {
+        if (cell.textContent.includes('Edit') || cell.textContent.includes('Delete') || cell.textContent.includes('Actions')) {
+          cell.remove();
+        }
+      });
+
+      // Create table wrapper with professional styling
+      const tableWrapper = document.createElement('div');
+      tableWrapper.style.cssText = `
+        margin: 0 40px 40px 40px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+      `;
+
+      // Style the table for PDF
+      tableClone.style.width = '100%';
+      tableClone.style.borderCollapse = 'collapse';
+      tableClone.style.fontSize = '13px';
+      tableClone.style.color = '#1e293b';
+      tableClone.style.margin = '0';
+      
+      // Style table headers with professional gradient
+      const headers = tableClone.querySelectorAll('th');
+      headers.forEach((header, index) => {
+        header.style.cssText = `
+          background: linear-gradient(135deg, #1e293b, #334155);
+          color: #ffffff;
+          padding: 16px 12px;
+          border: none;
+          font-weight: 700;
+          text-align: left;
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-bottom: 2px solid #f97316;
+        `;
+      });
+
+      // Style table cells with professional alternating rows
+      const rows = tableClone.querySelectorAll('tr');
+      rows.forEach((row, rowIndex) => {
+        if (rowIndex === 0) return; // Skip header row
+        
+        const cells = row.querySelectorAll('td');
+        const isEven = rowIndex % 2 === 0;
+        
+        cells.forEach((cell, cellIndex) => {
+          cell.style.cssText = `
+            padding: 14px 12px;
+            border: none;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: ${isEven ? '#ffffff' : '#f8fafc'};
+            color: #1e293b;
+            font-size: 13px;
+            vertical-align: middle;
+          `;
+          
+          // Special styling for specific columns
+          if (cellIndex === 0) { // Staff ID column
+            cell.style.fontFamily = 'monospace';
+            cell.style.fontSize = '12px';
+            cell.style.color = '#64748b';
+            cell.style.fontWeight = '600';
+          } else if (cellIndex === 1) { // Name column
+            cell.style.fontWeight = '700';
+            cell.style.color = '#1e293b';
+          } else if (cellIndex === 4) { // Role column
+            cell.style.textAlign = 'center';
+          } else if (cellIndex === 6) { // Assigned Tasks column
+            cell.style.textAlign = 'center';
+          }
+          
+          // Style chips/badges with professional appearance
+          const chips = cell.querySelectorAll('[style*="background"]');
+          chips.forEach(chip => {
+            const chipText = chip.textContent.toLowerCase();
+            let chipStyle = '';
+            
+            if (chipText.includes('admin')) {
+              chipStyle = 'background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;';
+            } else if (chipText.includes('seller')) {
+              chipStyle = 'background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6;';
+            } else if (chipText.includes('tech')) {
+              chipStyle = 'background: #d1fae5; color: #065f46; border: 1px solid #10b981;';
+            } else {
+              chipStyle = 'background: #f1f5f9; color: #475569; border: 1px solid #94a3b8;';
+            }
+            
+            chip.style.cssText = `
+              display: inline-block;
+              padding: 6px 12px;
+              border-radius: 20px;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              ${chipStyle}
+            `;
+          });
+        });
+      });
+
+      tableWrapper.appendChild(tableClone);
+      pdfContainer.appendChild(tableWrapper);
+
+      // Add professional footer
+      const footer = document.createElement('div');
+      footer.innerHTML = `
+        <div style="
+          background: #1e293b;
+          color: white;
+          padding: 20px 40px;
+          margin-top: 30px;
+          text-align: center;
+          font-size: 12px;
+        ">
+          <div style="margin-bottom: 8px; font-weight: 600;">Neptune Water Quality Management System</div>
+          <div style="opacity: 0.8;">Generated on ${new Date().toLocaleString()} | Confidential Document</div>
+        </div>
+      `;
+      pdfContainer.appendChild(footer);
+
+      document.body.appendChild(pdfContainer);
+
+      // Generate PDF with higher quality
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        height: pdfContainer.scrollHeight,
+        logging: false,
+        allowTaint: true
+      });
+
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Top margin
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20; // Account for margins
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      // Clean up
+      document.body.removeChild(pdfContainer);
+
+      // Download PDF with professional filename
+      const fileName = `Neptune_Staff_Directory_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
   /* -------------------- filtering ---------------------- */
   const safeList = Array.isArray(staffList) ? staffList : [];
   const filtered = useMemo(() => {
@@ -324,6 +581,25 @@ export default function Staff() {
               {refreshingTasks ? "Refreshing..." : "Refresh Tasks"}
             </Button>
 
+            <Button
+              variant="contained"
+              onClick={generatePDF}
+              disabled={generatingPDF || loading || filtered.length === 0}
+              startIcon={<PictureAsPdfIcon />}
+              sx={{
+                fontWeight: 700,
+                color: "#0f172a",
+                background: `linear-gradient(135deg, #dc2626, #ef4444)`,
+                boxShadow: "0 8px 20px rgba(220,38,38,.28)",
+                textTransform: "none",
+                borderRadius: 2,
+                minWidth: 140,
+                opacity: (generatingPDF || loading || filtered.length === 0) ? 0.7 : 1,
+              }}
+            >
+              {generatingPDF ? "Generating..." : "Download PDF"}
+            </Button>
+
             <Link to="/staffs/add">
             <Button
               variant="contained"
@@ -346,6 +622,7 @@ export default function Staff() {
 
       {/* table */}
       <TableContainer
+        ref={tableRef}
         component={Paper}
         sx={{
           width: "100%",
