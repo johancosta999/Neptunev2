@@ -18,10 +18,11 @@ function ClientWaterQualityDashboard() {
   const [records, setRecords] = useState([]);
   const [range, setRange] = useState("1w");
   const [loading, setLoading] = useState(true);
+  // Only pH, TDS, and Turbidity are available
   const [selectedParameters, setSelectedParameters] = useState({
     phLevel: true,
     tds: true,
-    turbidity: false
+    turbidity: true
   });
 
   useEffect(() => {
@@ -76,6 +77,7 @@ function ClientWaterQualityDashboard() {
     latest?.status?.toLowerCase() === "unsafe" ? "#ef4444" : "#10b981";
 
   // Parameter Configuration
+  // Only pH, TDS, and Turbidity are available
   const parameterConfig = {
     phLevel: { 
       name: "pH Level", 
@@ -97,7 +99,7 @@ function ClientWaterQualityDashboard() {
       name: "Turbidity", 
       unit: "NTU", 
       color: "#f97316", 
-      yAxisId: "turbidity", 
+      yAxisId: "right", 
       domain: [0, 100],
       icon: "🌊"
     }
