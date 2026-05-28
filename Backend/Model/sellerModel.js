@@ -73,6 +73,11 @@ const sellerSchema = new Schema({
         required: true,
     },
 
+    profilePicUrl: {
+        type: String,
+        default: '',
+    },
+
 
 });
 
