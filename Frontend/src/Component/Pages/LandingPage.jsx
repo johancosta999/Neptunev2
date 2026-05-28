@@ -112,6 +112,7 @@ export default function LandingPage() {
     <Box
       sx={{
         minHeight: "100dvh",
+        width: "100%",
         position: "relative",
         background: `linear-gradient(180deg, ${c.deep} 0%, ${c.ocean} 40%, ${c.aqua} 100%)`,
       }}
