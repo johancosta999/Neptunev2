@@ -23,6 +23,8 @@ function User({ user }) {
     }
   };
 
+  //html
+
   return (
     <div>
       <h3>ID: { _id }</h3>
